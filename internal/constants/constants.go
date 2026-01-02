@@ -2,7 +2,7 @@ package constants
 
 import "time"
 
-var maxtime = 24 * time.Hour
+var MaxTime = 24 * time.Hour
 
 type envKeys struct {
 	Env                string
@@ -27,7 +27,7 @@ var EnvKeys = envKeys{
 	DBSource:           "DB_SOURCE",
 }
 
-var Header = header{
+var Headers = header{
 	Origin:        "Origin",
 	ContentLength: "Content-Length",
 	ContentType:   "Content-Type",
