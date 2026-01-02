@@ -9,7 +9,11 @@ type envKeys struct {
 	ServerAddress      string
 	CorsAllowedOrigins string
 	DBDriver           string
-	DBSource           string
+	DBHost             string
+	DBPort             string
+	DBUser             string
+	DBPassword         string
+	DBName             string
 }
 
 type header struct {
@@ -24,7 +28,11 @@ var EnvKeys = envKeys{
 	ServerAddress:      "SERVER_ADDRESS",
 	CorsAllowedOrigins: "CORS_ALLOWED_ORIGINS",
 	DBDriver:           "DB_DRIVER",
-	DBSource:           "DB_SOURCE",
+	DBHost:             "DB_HOST",
+	DBPort:             "DB_PORT",
+	DBUser:             "DB_USER",
+	DBPassword:         "DB_PASSWORD",
+	DBName:             "DB_NAME",
 }
 
 var Headers = header{

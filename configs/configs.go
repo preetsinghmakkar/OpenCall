@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -21,23 +22,37 @@ type serverConfig struct {
 }
 
 type databaseConfig struct {
-	DatabaseDriver string
-	DatabaseSource string
+	DatabaseDriver   string
+	DatabaseHost     string
+	DatabasePort     int
+	DatabaseUser     string
+	DatabasePassword string
+	DatabaseName     string
 }
 
-func newConfig() *Config {
+func NewConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("No .env file found")
+	}
+
+	port, err := strconv.Atoi(GetEnvOrPanic(constants.EnvKeys.DBPort))
+	if err != nil {
+		panic("DB_PORT must be a number")
 	}
 
 	c := &Config{
 		Server: serverConfig{
 			Address: GetEnvOrPanic(constants.EnvKeys.ServerAddress),
 		},
+
 		Database: databaseConfig{
-			DatabaseDriver: GetEnvOrPanic(constants.EnvKeys.DBDriver),
-			DatabaseSource: GetEnvOrPanic(constants.EnvKeys.DBSource),
+			DatabaseDriver:   GetEnvOrPanic(constants.EnvKeys.DBDriver),
+			DatabaseHost:     GetEnvOrPanic(constants.EnvKeys.DBHost),
+			DatabasePort:     port,
+			DatabaseUser:     GetEnvOrPanic(constants.EnvKeys.DBUser),
+			DatabasePassword: GetEnvOrPanic(constants.EnvKeys.DBPassword),
+			DatabaseName:     GetEnvOrPanic(constants.EnvKeys.DBName),
 		},
 	}
 
