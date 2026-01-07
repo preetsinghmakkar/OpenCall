@@ -6,7 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/preetsinghmakkar/OpenCall/configs"
 	"github.com/preetsinghmakkar/OpenCall/internal/database"
+	"github.com/preetsinghmakkar/OpenCall/internal/handlers"
+	"github.com/preetsinghmakkar/OpenCall/internal/repositories"
 	serve "github.com/preetsinghmakkar/OpenCall/internal/server"
+	"github.com/preetsinghmakkar/OpenCall/internal/services"
 	"github.com/rs/zerolog/log"
 )
 
@@ -48,6 +51,15 @@ func main() {
 			"status": "ok",
 		})
 	})
+
+	// Initialize repositories
+	userRepo := repositories.NewUserRepository(client.DB)
+
+	//Initialize services
+	userService := services.NewUserService(userRepo)
+
+	// Pass services to handlers
+	userHandler := handlers.NewUserHandler(userService)
 
 	server := serve.NewServer(log.Logger, router, config)
 	server.Serve()
