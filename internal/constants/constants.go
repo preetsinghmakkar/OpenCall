@@ -4,6 +4,11 @@ import "time"
 
 var MaxTime = 24 * time.Hour
 
+const (
+	RoleUser  = "user"
+	RoleAdmin = "admin"
+)
+
 type envKeys struct {
 	Env                string
 	ServerAddress      string
@@ -14,6 +19,7 @@ type envKeys struct {
 	DBUser             string
 	DBPassword         string
 	DBName             string
+	JWTSecret          string
 }
 
 type header struct {
@@ -33,6 +39,7 @@ var EnvKeys = envKeys{
 	DBUser:             "DB_USER",
 	DBPassword:         "DB_PASSWORD",
 	DBName:             "DB_NAME",
+	JWTSecret:          "JWT_SECRET",
 }
 
 var Headers = header{

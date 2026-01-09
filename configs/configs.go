@@ -15,6 +15,7 @@ import (
 type Config struct {
 	Server   serverConfig
 	Database databaseConfig
+	JWT      jwtConfig
 }
 
 type serverConfig struct {
@@ -28,6 +29,10 @@ type databaseConfig struct {
 	DatabaseUser     string
 	DatabasePassword string
 	DatabaseName     string
+}
+
+type jwtConfig struct {
+	Secret string
 }
 
 func NewConfig() *Config {
@@ -53,6 +58,9 @@ func NewConfig() *Config {
 			DatabaseUser:     GetEnvOrPanic(constants.EnvKeys.DBUser),
 			DatabasePassword: GetEnvOrPanic(constants.EnvKeys.DBPassword),
 			DatabaseName:     GetEnvOrPanic(constants.EnvKeys.DBName),
+		},
+		JWT: jwtConfig{
+			Secret: GetEnvOrPanic(constants.EnvKeys.JWTSecret),
 		},
 	}
 

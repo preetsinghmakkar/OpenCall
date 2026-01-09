@@ -1,4 +1,4 @@
-package dto
+package dtos
 
 import (
 	"time"
@@ -46,6 +46,7 @@ type LoginResponse struct {
 	User         UserResponse `json:"user"`
 	AccessToken  string       `json:"access_token"`
 	RefreshToken string       `json:"refresh_token"`
+	ExpiresIn    int64        `json:"expires_in"`
 }
 
 // client will send request to refresh access token
@@ -55,7 +56,9 @@ type RefreshTokenRequest struct {
 
 // Sending response to the client after refreshing access token
 type RefreshTokenResponse struct {
-	AccessToken string `json:"access_token"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
 }
 
 // client will send request to update user details

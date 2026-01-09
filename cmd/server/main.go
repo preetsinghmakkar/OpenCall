@@ -8,13 +8,13 @@ import (
 	"github.com/preetsinghmakkar/OpenCall/internal/database"
 	"github.com/preetsinghmakkar/OpenCall/internal/handlers"
 	"github.com/preetsinghmakkar/OpenCall/internal/repositories"
+	"github.com/preetsinghmakkar/OpenCall/internal/routes"
 	serve "github.com/preetsinghmakkar/OpenCall/internal/server"
 	"github.com/preetsinghmakkar/OpenCall/internal/services"
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
-
 	config := configs.NewConfig()
 
 	client, err := database.NewSQLClient(database.Config{
@@ -29,37 +29,37 @@ func main() {
 		ConnMaxIdleTime:   15 * time.Minute,
 		ConnectionTimeout: 5 * time.Second,
 	})
-
 	if err != nil {
-		log.Fatal().Err(err).Msg("Failed to initialize database client")
-		return
+		log.Fatal().Err(err).Msg("Failed to initialize database")
 	}
-
-	defer func() {
-		if err := client.Close(); err != nil {
-			log.Error().Msgf("Failed to close database client: %v", err)
-		}
-	}()
-
-	cors := config.CorsNew()
+	defer client.Close()
 
 	router := gin.Default()
-	router.Use(cors)
+	router.Use(config.CorsNew())
 
 	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"status": "ok",
-		})
+		c.JSON(200, gin.H{"status": "ok"})
 	})
 
-	// Initialize repositories
 	userRepo := repositories.NewUserRepository(client.DB)
+	refreshTokenRepo := repositories.NewRefreshTokenRepository(client.DB)
 
-	//Initialize services
 	userService := services.NewUserService(userRepo)
+	authService := services.NewAuthService(
+		userRepo,
+		refreshTokenRepo,
+		config.JWT.Secret,
+	)
 
-	// Pass services to handlers
 	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(authService)
+
+	routes.RegisterPublicEndpoints(router, userHandler, authHandler)
+	routes.RegisterProtectedEndpoints(
+		router,
+		userHandler,
+		config.JWT.Secret,
+	)
 
 	server := serve.NewServer(log.Logger, router, config)
 	server.Serve()

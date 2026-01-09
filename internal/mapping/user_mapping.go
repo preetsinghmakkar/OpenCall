@@ -1,12 +1,12 @@
 package mapping
 
 import (
-	"github.com/preetsinghmakkar/OpenCall/internal/dto"
+	"github.com/preetsinghmakkar/OpenCall/internal/dtos"
 	"github.com/preetsinghmakkar/OpenCall/internal/models"
 )
 
-func ToUserResponse(user *models.User) dto.UserResponse {
-	return dto.UserResponse{
+func ToUserResponse(user *models.User) dtos.UserResponse {
+	return dtos.UserResponse{
 		ID:             user.ID,
 		FirstName:      user.FirstName,
 		LastName:       user.LastName,
@@ -20,8 +20,8 @@ func ToUserResponse(user *models.User) dto.UserResponse {
 	}
 }
 
-func ToUserResponseList(users []*models.User) []dto.UserResponse {
-	responses := make([]dto.UserResponse, 0, len(users))
+func ToUserResponseList(users []*models.User) []dtos.UserResponse {
+	responses := make([]dtos.UserResponse, 0, len(users))
 
 	for _, user := range users {
 		responses = append(responses, ToUserResponse(user))
@@ -30,18 +30,17 @@ func ToUserResponseList(users []*models.User) []dto.UserResponse {
 	return responses
 }
 
-func ToUserFromRegisterRequest(req *dto.RegisterUserRequest) *models.User {
+func ToUserFromRegisterRequest(req *dtos.RegisterUserRequest) *models.User {
 	return &models.User{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Username:  req.Username,
 		Email:     req.Email,
-		Role:      "mentee", // default role
 		IsActive:  true,
 	}
 }
 
-func ApplyUserUpdate(user *models.User, req *dto.UpdateUserRequest) {
+func ApplyUserUpdate(user *models.User, req *dtos.UpdateUserRequest) {
 	if req.FirstName != nil {
 		user.FirstName = *req.FirstName
 	}
@@ -60,8 +59,8 @@ func ToLoginResponse(
 	user *models.User,
 	accessToken string,
 	refreshToken string,
-) dto.LoginResponse {
-	return dto.LoginResponse{
+) dtos.LoginResponse {
+	return dtos.LoginResponse{
 		User:         ToUserResponse(user),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
