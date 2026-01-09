@@ -65,3 +65,17 @@ func msgForTag(fe validator.FieldError) string {
 		return "Invalid value"
 	}
 }
+
+func (h *User) GetUserProfile(c *gin.Context) {
+	username := c.Param("username")
+
+	resp, err := h.userService.GetUserProfile(username)
+	if err != nil {
+		c.JSON(404, gin.H{
+			"error": "user not found",
+		})
+		return
+	}
+
+	c.JSON(200, resp)
+}

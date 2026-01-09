@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/preetsinghmakkar/OpenCall/internal/dtos"
 	"github.com/preetsinghmakkar/OpenCall/internal/models"
 )
 
@@ -253,4 +254,57 @@ func (r *UserRepository) FindByID(userID uuid.UUID) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+func (r *UserRepository) FindPublicProfileByUsername(
+	username string,
+) (*dtos.UserProfileResponse, error) {
+
+	const query = `
+	SELECT
+		u.id,
+		u.username,
+		u.first_name,
+		u.last_name,
+		u.profile_picture,
+		u.bio,
+
+		(m.user_id IS NOT NULL) AS is_mentor,
+		COALESCE(m.title, '')
+
+	FROM users u
+	LEFT JOIN mentor_profiles m ON m.user_id = u.id
+	WHERE u.username = $1
+	  AND u.deleted_at IS NULL
+	LIMIT 1
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var resp dtos.UserProfileResponse
+	var mentorTitle string
+
+	err := r.db.QueryRowContext(ctx, query, username).Scan(
+		&resp.User.ID,
+		&resp.User.Username,
+		&resp.User.FirstName,
+		&resp.User.LastName,
+		&resp.User.ProfilePicture,
+		&resp.User.Bio,
+		&resp.IsMentor,
+		&mentorTitle,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.IsMentor {
+		resp.Mentor = &dtos.MentorPreview{
+			Title: mentorTitle,
+		}
+	}
+
+	return &resp, nil
 }

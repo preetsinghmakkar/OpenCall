@@ -9,16 +9,16 @@ import (
 func RegisterProtectedEndpoints(
 	router *gin.Engine,
 	userHandlers *handlers.User,
+	mentorHandler *handlers.MentorHandler,
 	jwtSecret string,
 ) {
 	protected := router.Group("/api")
 	protected.Use(middlewares.AuthMiddleware(jwtSecret))
 
-	protected.GET("/checking", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "authenticated",
-			"user_id": c.GetString("user_id"),
-			"role":    c.GetString("role"),
-		})
-	})
+	protected.POST("/mentor/profile", mentorHandler.CreateProfile)
+
+	// POST /api/mentor/services
+	// POST /api/mentor/availability
+	// POST /api/bookings
+
 }

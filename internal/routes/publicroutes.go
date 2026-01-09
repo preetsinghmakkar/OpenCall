@@ -12,4 +12,10 @@ func RegisterPublicEndpoints(router *gin.Engine, userHandlers *handlers.User, au
 	api.POST("/register", userHandlers.CreateUser)
 	api.POST("/auth/login", authHandler.Login)
 	api.POST("/auth/refresh", authHandler.RefreshToken)
+
+	api.GET("/users/:username", userHandlers.GetUserProfile)
+	//	GET  /api/mentors/:username
+	//  GET  /api/mentors/:id/services
+	//  GET  /api/mentors/:id/availability
+
 }

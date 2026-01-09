@@ -81,3 +81,9 @@ func (s *User) CreateUser(
 		Message: "user registered successfully",
 	}, nil
 }
+
+func (s *User) GetUserProfile(
+	username string,
+) (*dtos.UserProfileResponse, error) {
+	return s.userRepo.FindPublicProfileByUsername(username)
+}
