@@ -46,6 +46,7 @@ func main() {
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(client.DB)
 	mentorRepo := repositories.NewMentorRepository(client.DB)
 	mentorServiceRepo := repositories.NewMentorServiceRepository(client.DB)
+	mentorAvailabilityRepo := repositories.NewMentorAvailabilityRepository(client.DB)
 
 	// services
 	userService := services.NewUserService(userRepo)
@@ -59,13 +60,17 @@ func main() {
 		mentorServiceRepo,
 		mentorRepo,
 	)
+	mentorAvailabilityService := services.NewMentorAvailabilityService(
+		mentorAvailabilityRepo,
+		mentorRepo,
+	)
 
 	// handlers
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
 	mentorHandler := handlers.NewMentorHandler(mentorProfileService)
 	mentorServiceHandler := handlers.NewMentorServiceHandler(mentorOfferingService)
-
+	mentorAvailabilityHandler := handlers.NewMentorAvailabilityHandler(mentorAvailabilityService)
 	// routes
 	routes.RegisterPublicEndpoints(
 		router,
@@ -73,6 +78,7 @@ func main() {
 		authHandler,
 		mentorHandler,
 		mentorServiceHandler,
+		mentorAvailabilityHandler,
 	)
 
 	routes.RegisterProtectedEndpoints(
@@ -80,6 +86,7 @@ func main() {
 		userHandler,
 		mentorHandler,
 		mentorServiceHandler,
+		mentorAvailabilityHandler,
 		config.JWT.Secret,
 	)
 

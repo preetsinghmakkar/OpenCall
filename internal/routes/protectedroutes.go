@@ -11,6 +11,7 @@ func RegisterProtectedEndpoints(
 	userHandler *handlers.User,
 	mentorHandler *handlers.MentorHandler,
 	mentorServiceHandler *handlers.MentorServiceHandler,
+	mentorAvailabilityHandler *handlers.MentorAvailabilityHandler,
 	jwtSecret string,
 ) {
 	protected := router.Group("/api")
@@ -18,6 +19,7 @@ func RegisterProtectedEndpoints(
 
 	protected.POST("/mentor/profile", mentorHandler.CreateProfile)
 	protected.POST("/mentor/services", mentorServiceHandler.Create)
+	protected.POST("/mentor/availability", mentorAvailabilityHandler.Create)
 
 	// upcoming:
 	// protected.POST("/mentor/availability")
