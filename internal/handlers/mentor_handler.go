@@ -10,14 +10,14 @@ import (
 )
 
 type MentorHandler struct {
-	mentorService *services.MentorService
+	mentorProfileService *services.MentorProfileService
 }
 
 func NewMentorHandler(
-	mentorService *services.MentorService,
+	mentorProfileService *services.MentorProfileService,
 ) *MentorHandler {
 	return &MentorHandler{
-		mentorService: mentorService,
+		mentorProfileService: mentorProfileService,
 	}
 }
 
@@ -47,7 +47,7 @@ func (h *MentorHandler) CreateProfile(c *gin.Context) {
 		return
 	}
 
-	profile, err := h.mentorService.CreateProfile(userID, &req)
+	profile, err := h.mentorProfileService.CreateProfile(userID, &req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "mentor profile already exists or other error",
@@ -64,4 +64,18 @@ func (h *MentorHandler) CreateProfile(c *gin.Context) {
 		IsActive:  profile.IsActive,
 		CreatedAt: profile.CreatedAt,
 	})
+}
+
+func (h *MentorHandler) GetProfile(c *gin.Context) {
+	username := c.Param("username")
+
+	resp, err := h.mentorProfileService.GetMentorProfile(username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "mentor not found",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

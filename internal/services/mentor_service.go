@@ -9,35 +9,70 @@ import (
 	"github.com/preetsinghmakkar/OpenCall/internal/repositories"
 )
 
-type MentorService struct {
-	mentorRepo *repositories.MentorRepository
+type MentorOfferingService struct {
+	serviceRepo *repositories.MentorServiceRepository
+	mentorRepo  *repositories.MentorRepository
 }
 
-func NewMentorService(
+func NewMentorOfferingService(
+	serviceRepo *repositories.MentorServiceRepository,
 	mentorRepo *repositories.MentorRepository,
-) *MentorService {
-	return &MentorService{
-		mentorRepo: mentorRepo,
+) *MentorOfferingService {
+	return &MentorOfferingService{
+		serviceRepo: serviceRepo,
+		mentorRepo:  mentorRepo,
 	}
 }
 
-func (s *MentorService) CreateProfile(
+func (s *MentorOfferingService) CreateService(
 	userID uuid.UUID,
-	req *dtos.CreateMentorProfileRequest,
-) (*models.MentorProfile, error) {
+	req *dtos.CreateMentorServiceRequest,
+) (*models.MentorService, error) {
 
-	profile := &models.MentorProfile{
-		ID:       uuid.New(),
-		UserID:   userID,
-		Title:    strings.TrimSpace(req.Title),
-		Bio:      strings.TrimSpace(req.Bio),
-		Timezone: req.Timezone,
-		IsActive: true,
+	mentor, err := s.mentorRepo.FindByUserID(userID)
+	if err != nil {
+		return nil, err // mentor profile not found
 	}
-	err := s.mentorRepo.CreateProfile(profile)
+
+	service := &models.MentorService{
+		ID:              uuid.New(),
+		MentorID:        mentor.ID,
+		Title:           strings.TrimSpace(req.Title),
+		Description:     strings.TrimSpace(req.Description),
+		DurationMinutes: req.DurationMinutes,
+		PriceCents:      req.PriceCents,
+		Currency:        strings.ToUpper(req.Currency),
+		IsActive:        true,
+	}
+	if err := s.serviceRepo.Create(service); err != nil {
+		return nil, err
+	}
+
+	return service, nil
+}
+
+func (s *MentorOfferingService) GetServicesByUsername(
+	username string,
+) ([]dtos.MentorServiceResponse, error) {
+
+	services, err := s.serviceRepo.FindByUsername(username)
 	if err != nil {
 		return nil, err
 	}
 
-	return profile, nil
+	resp := make([]dtos.MentorServiceResponse, 0, len(services))
+
+	for _, svc := range services {
+		resp = append(resp, dtos.MentorServiceResponse{
+			ID:              svc.ID,
+			Title:           svc.Title,
+			Description:     svc.Description,
+			DurationMinutes: svc.DurationMinutes,
+			PriceCents:      svc.PriceCents,
+			Currency:        svc.Currency,
+			IsActive:        svc.IsActive,
+		})
+	}
+
+	return resp, nil
 }

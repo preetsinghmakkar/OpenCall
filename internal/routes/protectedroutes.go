@@ -8,17 +8,18 @@ import (
 
 func RegisterProtectedEndpoints(
 	router *gin.Engine,
-	userHandlers *handlers.User,
+	userHandler *handlers.User,
 	mentorHandler *handlers.MentorHandler,
+	mentorServiceHandler *handlers.MentorServiceHandler,
 	jwtSecret string,
 ) {
 	protected := router.Group("/api")
 	protected.Use(middlewares.AuthMiddleware(jwtSecret))
 
 	protected.POST("/mentor/profile", mentorHandler.CreateProfile)
+	protected.POST("/mentor/services", mentorServiceHandler.Create)
 
-	// POST /api/mentor/services
-	// POST /api/mentor/availability
-	// POST /api/bookings
-
+	// upcoming:
+	// protected.POST("/mentor/availability")
+	// protected.POST("/bookings")
 }

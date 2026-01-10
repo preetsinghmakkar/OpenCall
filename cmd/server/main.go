@@ -41,27 +41,45 @@ func main() {
 		c.JSON(200, gin.H{"status": "ok"})
 	})
 
+	// repositories
 	userRepo := repositories.NewUserRepository(client.DB)
 	refreshTokenRepo := repositories.NewRefreshTokenRepository(client.DB)
 	mentorRepo := repositories.NewMentorRepository(client.DB)
+	mentorServiceRepo := repositories.NewMentorServiceRepository(client.DB)
 
+	// services
 	userService := services.NewUserService(userRepo)
 	authService := services.NewAuthService(
 		userRepo,
 		refreshTokenRepo,
 		config.JWT.Secret,
 	)
-	mentorService := services.NewMentorService(mentorRepo)
+	mentorProfileService := services.NewMentorProfileService(mentorRepo)
+	mentorOfferingService := services.NewMentorOfferingService(
+		mentorServiceRepo,
+		mentorRepo,
+	)
 
+	// handlers
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
-	mentorHandler := handlers.NewMentorHandler(mentorService)
+	mentorHandler := handlers.NewMentorHandler(mentorProfileService)
+	mentorServiceHandler := handlers.NewMentorServiceHandler(mentorOfferingService)
 
-	routes.RegisterPublicEndpoints(router, userHandler, authHandler)
+	// routes
+	routes.RegisterPublicEndpoints(
+		router,
+		userHandler,
+		authHandler,
+		mentorHandler,
+		mentorServiceHandler,
+	)
+
 	routes.RegisterProtectedEndpoints(
 		router,
 		userHandler,
 		mentorHandler,
+		mentorServiceHandler,
 		config.JWT.Secret,
 	)
 
