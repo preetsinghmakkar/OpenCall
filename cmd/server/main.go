@@ -71,7 +71,12 @@ func main() {
 		mentorAvailabilityRepo,
 		bookingRepo,
 	)
-
+	bookingService := services.NewBookingService(
+		bookingRepo,
+		mentorRepo,
+		mentorServiceRepo,
+		mentorAvailabilityRepo,
+	)
 	// handlers
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
@@ -81,6 +86,7 @@ func main() {
 		mentorAvailabilityService,
 		availabilityService,
 	)
+	bookingHandler := handlers.NewBookingHandler(bookingService)
 
 	// routes
 	routes.RegisterPublicEndpoints(
@@ -98,6 +104,7 @@ func main() {
 		mentorHandler,
 		mentorServiceHandler,
 		mentorAvailabilityHandler,
+		bookingHandler,
 		config.JWT.Secret,
 	)
 
