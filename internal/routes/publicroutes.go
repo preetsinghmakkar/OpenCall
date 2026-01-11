@@ -22,11 +22,13 @@ func RegisterPublicEndpoints(
 
 	public.GET("/users/:username", userHandlers.GetUserProfile)
 	public.GET("/mentors/:username", mentorHandler.GetProfile)
-	public.GET("/mentor/:username/services", mentorServiceHandler.GetByUsername)
+	public.GET("/mentors/:username/services", mentorServiceHandler.GetByUsername)
 
-	public.GET("/mentor/:username/availability", mentorAvailabilityHandler.GetByUsername)
+	public.GET("/mentors/:username/availability", mentorAvailabilityHandler.GetByUsername)
 
-	//  GET  /api/mentors/:id/services
-	//  GET  /api/mentors/:id/availability
+	router.GET(
+		"/mentors/:username/availability",
+		mentorAvailabilityHandler.Get,
+	)
 
 }

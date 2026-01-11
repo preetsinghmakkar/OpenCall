@@ -138,3 +138,46 @@ func (r *MentorRepository) FindByUsername(
 
 	return &resp, nil
 }
+
+func (r *MentorRepository) FindByUsernameRaw(
+	username string,
+) (*models.MentorProfile, error) {
+
+	const query = `
+	SELECT
+		mp.id,
+		mp.user_id,
+		mp.title,
+		mp.bio,
+		mp.timezone,
+		mp.is_active,
+		mp.created_at,
+		mp.updated_at
+	FROM users u
+	JOIN mentor_profiles mp ON mp.user_id = u.id
+	WHERE u.username = $1
+	  AND mp.is_active = true
+	`
+
+	var mentor models.MentorProfile
+
+	err := r.db.QueryRow(
+		query,
+		username,
+	).Scan(
+		&mentor.ID,
+		&mentor.UserID,
+		&mentor.Title,
+		&mentor.Bio,
+		&mentor.Timezone,
+		&mentor.IsActive,
+		&mentor.CreatedAt,
+		&mentor.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &mentor, nil
+}

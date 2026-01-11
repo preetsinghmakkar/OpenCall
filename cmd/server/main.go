@@ -47,6 +47,7 @@ func main() {
 	mentorRepo := repositories.NewMentorRepository(client.DB)
 	mentorServiceRepo := repositories.NewMentorServiceRepository(client.DB)
 	mentorAvailabilityRepo := repositories.NewMentorAvailabilityRepository(client.DB)
+	bookingRepo := repositories.NewBookingRepository(client.DB)
 
 	// services
 	userService := services.NewUserService(userRepo)
@@ -64,13 +65,23 @@ func main() {
 		mentorAvailabilityRepo,
 		mentorRepo,
 	)
+	availabilityService := services.NewAvailabilityService(
+		mentorRepo,
+		mentorServiceRepo,
+		mentorAvailabilityRepo,
+		bookingRepo,
+	)
 
 	// handlers
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
 	mentorHandler := handlers.NewMentorHandler(mentorProfileService)
 	mentorServiceHandler := handlers.NewMentorServiceHandler(mentorOfferingService)
-	mentorAvailabilityHandler := handlers.NewMentorAvailabilityHandler(mentorAvailabilityService)
+	mentorAvailabilityHandler := handlers.NewMentorAvailabilityHandler(
+		mentorAvailabilityService,
+		availabilityService,
+	)
+
 	// routes
 	routes.RegisterPublicEndpoints(
 		router,

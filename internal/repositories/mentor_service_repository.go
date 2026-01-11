@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/preetsinghmakkar/OpenCall/internal/models"
 )
 
@@ -110,4 +111,50 @@ func (r *MentorServiceRepository) FindByUsername(
 	}
 
 	return services, nil
+}
+
+func (r *MentorServiceRepository) FindByID(
+	serviceID uuid.UUID,
+) (*models.MentorService, error) {
+
+	const query = `
+	SELECT
+		id,
+		mentor_id,
+		title,
+		description,
+		duration_minutes,
+		price_cents,
+		currency,
+		is_active,
+		created_at,
+		updated_at
+	FROM mentor_services
+	WHERE id = $1
+	  AND is_active = true
+	`
+
+	var service models.MentorService
+
+	err := r.db.QueryRow(
+		query,
+		serviceID,
+	).Scan(
+		&service.ID,
+		&service.MentorID,
+		&service.Title,
+		&service.Description,
+		&service.DurationMinutes,
+		&service.PriceCents,
+		&service.Currency,
+		&service.IsActive,
+		&service.CreatedAt,
+		&service.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &service, nil
 }
