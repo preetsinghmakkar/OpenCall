@@ -36,7 +36,36 @@ export interface LoginResponse {
   expires_in: number
 }
 
+/**
+ * Matches backend RegisterUserRequest
+ */
+export interface RegisterRequest {
+  first_name: string
+  last_name: string
+  username: string
+  email: string
+  password: string
+}
+
+/**
+ * Matches backend RegisterUserResponse
+ */
+export interface RegisterResponse {
+  user: User
+  message: string
+}
+
 export const authApi = {
+  register(payload: RegisterRequest) {
+    return apiClient<RegisterResponse, RegisterRequest>(
+      "/api/auth/register",
+      {
+        method: "POST",
+        body: payload,
+      }
+    )
+  },
+
   login(payload: LoginRequest) {
     return apiClient<LoginResponse, LoginRequest>(
       "/api/auth/login",

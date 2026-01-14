@@ -1,5 +1,7 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Field,
@@ -9,18 +11,43 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useAuthStore } from "@/stores/auth.store"
 
 export default function LoginForm() {
+  const router = useRouter()
+  const { login, loading, error, isAuthenticated } = useAuthStore()
+  const [localError, setLocalError] = useState<string | null>(null)
 
-    function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-      e.preventDefault()
-
-      const formData = new FormData(e.currentTarget)
-      const identifier = formData.get("identifier")
-      const password = formData.get("password")
-
-      console.log({ identifier, password })
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.push("/dashboard")
     }
+  }, [isAuthenticated, router])
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setLocalError(null)
+
+    const formData = new FormData(e.currentTarget)
+    const identifier = formData.get("identifier") as string
+    const password = formData.get("password") as string
+
+    if (!identifier || !password) {
+      setLocalError("Please fill in all fields")
+      return
+    }
+
+    try {
+      await login({ identifier, password })
+      // Redirect is handled by useEffect when isAuthenticated becomes true
+      router.push("/dashboard")
+    } catch (err: any) {
+      setLocalError(err?.message || "Login failed")
+    }
+  }
+
+  const displayError = localError || error
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-rose-50">
@@ -35,6 +62,13 @@ export default function LoginForm() {
             Please sign in to your account
           </p>
         </div>
+
+        {/* Error */}
+        {displayError && (
+          <div className="mb-4 rounded bg-red-100 p-3 text-red-700 text-sm">
+            {displayError}
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={onSubmit}>
@@ -75,10 +109,22 @@ export default function LoginForm() {
             {/* Submit */}
             <Button
               type="submit"
-              className="mt-2 w-full bg-orange-500 text-white hover:bg-orange-600"
+              disabled={loading}
+              className="mt-2 w-full bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Log in
+              {loading ? "Logging in..." : "Log in"}
             </Button>
+
+            {/* Link to Register */}
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Don't have an account?{" "}
+              <a
+                href="/register"
+                className="text-orange-500 hover:text-orange-600 font-medium"
+              >
+                Sign up
+              </a>
+            </p>
           </FieldGroup>
         </form>
       </div>

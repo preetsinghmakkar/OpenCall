@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
+import { authApi } from "@/lib/api/auth"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -24,32 +25,19 @@ export default function RegisterPage() {
 
     const formData = new FormData(e.currentTarget)
     const payload = {
-      first_name: formData.get("first_name"),
-      last_name: formData.get("last_name"),
-      username: formData.get("username"),
-      email: formData.get("email"),
-      password: formData.get("password"),
+      first_name: formData.get("first_name") as string,
+      last_name: formData.get("last_name") as string,
+      username: formData.get("username") as string,
+      email: formData.get("email") as string,
+      password: formData.get("password") as string,
     }
 
     try {
-      const res = await fetch("http://localhost:8080/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      })
-
-      if (!res.ok) {
-        const data = await res.json()
-        setError(data.message || "Registration failed")
-        setLoading(false)
-        return
-      }
-
+      await authApi.register(payload)
       // success → redirect to login
-      router.push("/auth/login")
-    } catch (err) {
-      console.error(err)
-      setError("Something went wrong")
+      router.push("/login")
+    } catch (err: any) {
+      setError(err?.message || "Registration failed")
       setLoading(false)
     }
   }
@@ -164,6 +152,17 @@ export default function RegisterPage() {
             >
               {loading ? "Creating Account..." : "Sign Up"}
             </Button>
+
+            {/* Link to Login */}
+            <p className="mt-4 text-center text-sm text-gray-600">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="text-orange-500 hover:text-orange-600 font-medium"
+              >
+                Sign in
+              </a>
+            </p>
           </FieldGroup>
         </form>
       </div>

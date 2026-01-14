@@ -1,0 +1,34 @@
+"use client"
+
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/stores/auth.store"
+import { setupDefaultInterceptors } from "@/lib/api/interceptors"
+
+/**
+ * Component to set up API client interceptors and handle auth logout events
+ * Should be included in the root layout
+ */
+export function ApiClientSetup() {
+  const router = useRouter()
+  const { logout } = useAuthStore()
+
+  useEffect(() => {
+    // Set up default interceptors (logging, error tracking, etc.)
+    setupDefaultInterceptors()
+
+    // Listen for auth-logout events (dispatched when token refresh fails)
+    const handleAuthLogout = () => {
+      logout()
+      router.push("/login")
+    }
+
+    window.addEventListener("auth-logout", handleAuthLogout)
+
+    return () => {
+      window.removeEventListener("auth-logout", handleAuthLogout)
+    }
+  }, [logout, router])
+
+  return null // This component doesn't render anything
+}
