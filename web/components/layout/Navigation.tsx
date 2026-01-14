@@ -65,6 +65,16 @@ export function Navigation() {
               >
                 Browse Mentors
               </Link>
+              <Link
+                href="/mentor/sessions"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive("/mentor/sessions")
+                    ? "text-orange-500 bg-orange-50"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+              >
+                My Sessions
+              </Link>
             </div>
           </div>
 

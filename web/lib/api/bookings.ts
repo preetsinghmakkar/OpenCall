@@ -40,6 +40,20 @@ export interface MyBookingResponse {
   currency: string
 }
 
+/**
+ * Matches backend MentorBookedSessionResponse
+ */
+export interface MentorBookedSessionResponse {
+  id: string
+  user_username: string
+  service_title: string
+  booking_date: string // format "YYYY-MM-DD"
+  start_time: string // format "HH:MM"
+  end_time: string // format "HH:MM"
+  price_cents: number
+  currency: string
+}
+
 export const bookingsApi = {
   /**
    * Create a booking (protected)
@@ -61,4 +75,18 @@ export const bookingsApi = {
       method: "GET",
     })
   },
+
+  /**
+   * Get mentor's booked sessions (confirmed bookings only) (protected)
+   * GET /api/mentor/booked-sessions
+   */
+  getMentorBookedSessions() {
+    return apiClient<MentorBookedSessionResponse[]>(
+      "/api/mentor/booked-sessions",
+      {
+        method: "GET",
+      }
+    )
+  },
 }
+

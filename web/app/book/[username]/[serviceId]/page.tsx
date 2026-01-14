@@ -120,15 +120,17 @@ function BookingFlowContent() {
     setSubmitting(true)
 
     try {
-      await bookingsApi.create({
+      const booking = await bookingsApi.create({
         mentor_id: mentor.mentor.id,
         service_id: service.id,
         booking_date: selectedDate,
         start_time: selectedSlot.start,
       })
 
-      toast.success("Booking created successfully!")
-      router.push("/bookings")
+      toast.success("Booking created! Redirecting to payment...")
+      // Store booking ID in session storage for payment processing
+      sessionStorage.setItem("pendingPaymentBookingId", booking.id)
+      router.push("/bookings/payment")
     } catch (err: any) {
       const errorMessage = err?.message || "Failed to create booking"
       toast.error(errorMessage)

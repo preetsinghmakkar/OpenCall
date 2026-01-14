@@ -1,7 +1,11 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { formatPrice } from "@/lib/currencies"
 import type { MyBookingResponse } from "@/lib/api/bookings"
+import { Button } from "./button"
+import { toast } from "sonner"
 
 interface BookingCardProps {
   booking: MyBookingResponse
@@ -14,6 +18,9 @@ interface BookingCardProps {
  * Used in My Bookings page
  */
 export function BookingCard({ booking, className = "" }: BookingCardProps) {
+  const router = useRouter()
+  const [isProcessing, setIsProcessing] = useState(false)
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString("en-US", {
@@ -45,6 +52,19 @@ export function BookingCard({ booking, className = "" }: BookingCardProps) {
         return "bg-blue-100 text-blue-700"
       default:
         return "bg-gray-100 text-gray-700"
+    }
+  }
+
+  const handlePayment = async () => {
+    try {
+      setIsProcessing(true)
+      // Store booking ID in sessionStorage for payment page
+      sessionStorage.setItem("pendingPaymentBookingId", booking.id)
+      toast.success("Redirecting to payment...")
+      router.push("/bookings/payment")
+    } catch (err: any) {
+      toast.error("Failed to process payment")
+      setIsProcessing(false)
     }
   }
 
@@ -80,9 +100,20 @@ export function BookingCard({ booking, className = "" }: BookingCardProps) {
         </div>
 
         <div className="text-right">
-          <p className="text-lg font-semibold text-gray-800">
+          <p className="text-lg font-semibold text-gray-800 mb-4">
             {formatPrice(booking.price_cents, booking.currency)}
           </p>
+          
+          {/* Payment Button for Pending Bookings */}
+          {booking.status.toLowerCase() === "pending" && (
+            <Button
+              onClick={handlePayment}
+              disabled={isProcessing}
+              className="bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed w-full"
+            >
+              {isProcessing ? "Processing..." : "Pay Now"}
+            </Button>
+          )}
         </div>
       </div>
     </div>

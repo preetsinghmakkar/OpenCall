@@ -54,7 +54,7 @@ export const availabilityApi = {
 
   /**
    * Get available booking slots for a specific date and service (public)
-   * GET /mentors/:username/availability?date=YYYY-MM-DD&service_id=uuid
+   * GET /api/mentors/:username/availability?date=YYYY-MM-DD&service_id=uuid
    */
   getAvailableSlots(
     username: string,
@@ -69,7 +69,7 @@ export const availabilityApi = {
     })
 
     return apiClient<AvailabilityResponse>(
-      `/mentors/${username}/availability?${queryParams.toString()}`,
+      `/api/mentors/${username}/availability?${queryParams.toString()}`,
       {
         method: "GET",
         skipAuth: true, // Public endpoint

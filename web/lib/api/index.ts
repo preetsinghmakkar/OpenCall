@@ -6,6 +6,7 @@ export * from "./mentor"
 export * from "./services"
 export * from "./availability"
 export * from "./bookings"
+export * from "./payments"
 export * from "./users"
 export * from "./client"
 
