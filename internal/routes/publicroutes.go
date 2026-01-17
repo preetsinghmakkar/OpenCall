@@ -3,6 +3,7 @@ package routes
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/preetsinghmakkar/OpenCall/internal/handlers"
+	"github.com/preetsinghmakkar/OpenCall/internal/repositories"
 )
 
 func RegisterPublicEndpoints(
@@ -12,11 +13,17 @@ func RegisterPublicEndpoints(
 	mentorHandler *handlers.MentorHandler,
 	mentorServiceHandler *handlers.MentorServiceHandler,
 	mentorAvailabilityHandler *handlers.MentorAvailabilityHandler,
+	paymentHandler *handlers.PaymentHandler,
+	bookingRepo *repositories.BookingRepository,
+	userRepo *repositories.UserRepository,
+	mentorRepo *repositories.MentorRepository,
+	jwtSecret string,
+	zegoHandler *handlers.ZegoHandler,
 ) {
 
 	public := router.Group("/api")
 
-	public.POST("/register", userHandlers.CreateUser)
+	public.POST("/auth/register", userHandlers.CreateUser)
 	public.POST("/auth/login", authHandler.Login)
 	public.POST("/auth/refresh", authHandler.RefreshToken)
 
@@ -26,9 +33,9 @@ func RegisterPublicEndpoints(
 
 	public.GET("/mentors/:username/availability", mentorAvailabilityHandler.GetByUsername)
 
-	router.GET(
-		"/mentors/:username/availability",
-		mentorAvailabilityHandler.Get,
-	)
+	public.POST("/webhooks/razorpay", paymentHandler.RazorpayWebhook)
+
+	// Zego routes
+	public.POST("/zego/token", zegoHandler.GenerateToken)
 
 }

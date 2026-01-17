@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { formatPrice } from "@/lib/currencies"
 import type { MyBookingResponse } from "@/lib/api/bookings"
 import { Button } from "./button"
+import { checkSessionJoinability, getTimeUntilSession } from "@/lib/utils/session-time"
 import { toast } from "sonner"
 
 interface BookingCardProps {
@@ -20,6 +21,14 @@ interface BookingCardProps {
 export function BookingCard({ booking, className = "" }: BookingCardProps) {
   const router = useRouter()
   const [isProcessing, setIsProcessing] = useState(false)
+
+  // Check if session can be joined (only for confirmed bookings)
+  const sessionStatus = useMemo(() => {
+    if (booking.status.toLowerCase() !== "confirmed") {
+      return { canJoin: false, message: "", minutesUntilStart: 0 }
+    }
+    return checkSessionJoinability(booking.date, booking.start_time, booking.end_time)
+  }, [booking])
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
@@ -113,6 +122,29 @@ export function BookingCard({ booking, className = "" }: BookingCardProps) {
             >
               {isProcessing ? "Processing..." : "Pay Now"}
             </Button>
+          )}
+
+          {/* Join Call Button for Confirmed Bookings */}
+          {booking.status.toLowerCase() === "confirmed" && (
+            <div>
+              <Button
+                onClick={() => router.push(`/session/${booking.id}`)}
+                disabled={!sessionStatus.canJoin}
+                className={`w-full ${
+                  sessionStatus.canJoin
+                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                    : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                }`}
+                title={sessionStatus.message}
+              >
+                {sessionStatus.canJoin ? "Join Call" : "Not Yet Available"}
+              </Button>
+              {!sessionStatus.canJoin && (
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  {sessionStatus.message}
+                </p>
+              )}
+            </div>
           )}
         </div>
       </div>

@@ -89,5 +89,14 @@ export const authApi = {
       }
     )
   },
+
+  logout() {
+    return apiClient<{ message: string }, void>(
+      "/api/auth/logout",
+      {
+        method: "DELETE",
+      }
+    )
+  },
 }
 

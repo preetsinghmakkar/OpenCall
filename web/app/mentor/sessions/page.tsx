@@ -1,13 +1,17 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { Navigation } from "@/components/layout/Navigation"
+import { MentorSessionCard } from "@/components/ui/mentor-session-card"
 import { bookingsApi, type MentorBookedSessionResponse } from "@/lib/api/bookings"
+import { ApiError } from "@/lib/api/client"
 import { formatPrice } from "@/lib/currencies"
 import { toast } from "sonner"
 
 function MentorSessionsContent() {
+  const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [sessions, setSessions] = useState<MentorBookedSessionResponse[]>([])
   const [error, setError] = useState("")
@@ -25,7 +29,16 @@ function MentorSessionsContent() {
           toast.info("No booked sessions yet")
         }
       } catch (err: any) {
-        const errorMessage = err?.message || "Failed to load booked sessions"
+        let errorMessage = err?.message || "Failed to load booked sessions"
+
+        // If mentor profile is missing, guide user to create it
+        if (err instanceof ApiError && err.status === 404) {
+          errorMessage =
+            (err.data?.error as string) ||
+            "Mentor profile not found. Please create your mentor profile first."
+          router.push("/mentor/create-profile")
+        }
+
         setError(errorMessage)
         toast.error(errorMessage)
       } finally {
@@ -35,24 +48,6 @@ function MentorSessionsContent() {
 
     loadSessions()
   }, [])
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + "T00:00:00Z")
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
-
-  const formatTime = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(":")
-    const hour = parseInt(hours, 10)
-    const ampm = hour >= 12 ? "PM" : "AM"
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
 
   if (loading) {
     return (
@@ -116,56 +111,9 @@ function MentorSessionsContent() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className="space-y-4">
             {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow p-6"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  {/* Left: Client & Service Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-semibold">
-                        {session.user_username.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-800 truncate">
-                          {session.user_username}
-                        </p>
-                        <p className="text-sm text-gray-600 truncate">
-                          {session.service_title}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Center: Date & Time */}
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600 mb-1">
-                      {formatDate(session.booking_date)}
-                    </p>
-                    <p className="text-lg font-semibold text-orange-600">
-                      {formatTime(session.start_time)} - {formatTime(session.end_time)}
-                    </p>
-                  </div>
-
-                  {/* Right: Price */}
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600 mb-1">Amount</p>
-                    <p className="text-2xl font-bold text-gray-800">
-                      {formatPrice(session.price_cents, session.currency)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Status Badge */}
-                <div className="mt-4 pt-4 border-t border-gray-100">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                    ✓ Confirmed
-                  </span>
-                </div>
-              </div>
+              <MentorSessionCard key={session.id} session={session} />
             ))}
           </div>
         )}

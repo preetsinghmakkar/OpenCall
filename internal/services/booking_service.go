@@ -169,5 +169,25 @@ func (s *BookingService) GetMyBookings(
 		return nil, err
 	}
 
+	if bookings == nil {
+		return []*dtos.MyBookingResponse{}, nil
+	}
+
 	return bookings, nil
+}
+
+func (s *BookingService) GetMentorBookedSessions(
+	mentorID uuid.UUID,
+) ([]*dtos.MentorBookedSessionResponse, error) {
+
+	sessions, err := s.bookingRepo.GetByMentorIDConfirmed(mentorID)
+	if err != nil {
+		return nil, err
+	}
+
+	if sessions == nil {
+		return []*dtos.MentorBookedSessionResponse{}, nil
+	}
+
+	return sessions, nil
 }

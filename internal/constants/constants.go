@@ -10,16 +10,21 @@ const (
 )
 
 type envKeys struct {
-	Env                string
-	ServerAddress      string
-	CorsAllowedOrigins string
-	DBDriver           string
-	DBHost             string
-	DBPort             string
-	DBUser             string
-	DBPassword         string
-	DBName             string
-	JWTSecret          string
+	Env                   string
+	ServerAddress         string
+	CorsAllowedOrigins    string
+	DBDriver              string
+	DBHost                string
+	DBPort                string
+	DBUser                string
+	DBPassword            string
+	DBName                string
+	JWTSecret             string
+	RazorpayKeyID         string
+	RazorpayKeySecret     string
+	RazorpayWebhookSecret string
+	ZegoAppID             string
+	ZegoServerSecret      string
 }
 
 type header struct {
@@ -30,16 +35,21 @@ type header struct {
 }
 
 var EnvKeys = envKeys{
-	Env:                "ENV",
-	ServerAddress:      "SERVER_ADDRESS",
-	CorsAllowedOrigins: "CORS_ALLOWED_ORIGINS",
-	DBDriver:           "DB_DRIVER",
-	DBHost:             "DB_HOST",
-	DBPort:             "DB_PORT",
-	DBUser:             "DB_USER",
-	DBPassword:         "DB_PASSWORD",
-	DBName:             "DB_NAME",
-	JWTSecret:          "JWT_SECRET",
+	Env:                   "ENV",
+	ServerAddress:         "SERVER_ADDRESS",
+	CorsAllowedOrigins:    "CORS_ALLOWED_ORIGINS",
+	DBDriver:              "DB_DRIVER",
+	DBHost:                "DB_HOST",
+	DBPort:                "DB_PORT",
+	DBUser:                "DB_USER",
+	DBPassword:            "DB_PASSWORD",
+	DBName:                "DB_NAME",
+	JWTSecret:             "JWT_SECRET",
+	RazorpayKeyID:         "RAZORPAY_KEY_ID",
+	RazorpayKeySecret:     "RAZORPAY_KEY_SECRET",
+	RazorpayWebhookSecret: "RAZORPAY_WEBHOOK_SECRET",
+	ZegoAppID:             "ZEGO_APP_ID",
+	ZegoServerSecret:      "ZEGO_SERVER_SECRET",
 }
 
 var Headers = header{

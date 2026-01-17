@@ -25,7 +25,7 @@ function MyBookingsContent() {
     try {
       setLoading(true)
       setError("")
-      const myBookings = await bookingsApi.getMyBookings()
+		  const myBookings = (await bookingsApi.getMyBookings()) ?? []
       // Sort by date (most recent first)
       const sorted = myBookings.sort((a, b) => {
         const dateA = new Date(`${a.date}T${a.start_time}`)

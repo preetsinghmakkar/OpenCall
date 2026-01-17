@@ -48,6 +48,11 @@ func main() {
 	mentorServiceRepo := repositories.NewMentorServiceRepository(client.DB)
 	mentorAvailabilityRepo := repositories.NewMentorAvailabilityRepository(client.DB)
 	bookingRepo := repositories.NewBookingRepository(client.DB)
+	paymentRepo := repositories.NewPaymentRepository(client.DB)
+	razorpayClient := services.NewRazorpayClient(
+		config.Razorpay.KeyID,
+		config.Razorpay.KeySecret,
+	)
 
 	// services
 	userService := services.NewUserService(userRepo)
@@ -77,6 +82,20 @@ func main() {
 		mentorServiceRepo,
 		mentorAvailabilityRepo,
 	)
+	paymentService := services.NewPaymentService(
+		client.DB,
+		paymentRepo,
+		bookingRepo,
+		razorpayClient,
+		config.Razorpay.KeySecret,
+	)
+
+	// services (continued)
+	zegoService := services.NewZegoCloudService(
+		config.Zego.AppID,
+		config.Zego.ServerSecret,
+	)
+
 	// handlers
 	userHandler := handlers.NewUserHandler(userService)
 	authHandler := handlers.NewAuthHandler(authService)
@@ -86,7 +105,9 @@ func main() {
 		mentorAvailabilityService,
 		availabilityService,
 	)
-	bookingHandler := handlers.NewBookingHandler(bookingService)
+	bookingHandler := handlers.NewBookingHandler(bookingService, mentorRepo)
+	paymentHandler := handlers.NewPaymentHandler(paymentService)
+	zegoHandler := handlers.NewZegoHandler(zegoService)
 
 	// routes
 	routes.RegisterPublicEndpoints(
@@ -96,6 +117,12 @@ func main() {
 		mentorHandler,
 		mentorServiceHandler,
 		mentorAvailabilityHandler,
+		paymentHandler,
+		bookingRepo,
+		userRepo,
+		mentorRepo,
+		config.JWT.Secret,
+		zegoHandler,
 	)
 
 	routes.RegisterProtectedEndpoints(
@@ -105,7 +132,10 @@ func main() {
 		mentorServiceHandler,
 		mentorAvailabilityHandler,
 		bookingHandler,
+		paymentHandler,
+		authHandler,
 		config.JWT.Secret,
+		zegoHandler,
 	)
 
 	server := serve.NewServer(log.Logger, router, config)

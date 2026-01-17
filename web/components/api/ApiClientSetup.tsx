@@ -11,9 +11,12 @@ import { setupDefaultInterceptors } from "@/lib/api/interceptors"
  */
 export function ApiClientSetup() {
   const router = useRouter()
-  const { logout } = useAuthStore()
+  const { logout, initializeFromLocalStorage } = useAuthStore()
 
   useEffect(() => {
+    // Initialize auth state from localStorage on mount
+    initializeFromLocalStorage()
+
     // Set up default interceptors (logging, error tracking, etc.)
     setupDefaultInterceptors()
 
@@ -28,7 +31,7 @@ export function ApiClientSetup() {
     return () => {
       window.removeEventListener("auth-logout", handleAuthLogout)
     }
-  }, [logout, router])
+  }, [logout, router, initializeFromLocalStorage])
 
   return null // This component doesn't render anything
 }

@@ -51,6 +51,29 @@ func (h *MentorAvailabilityHandler) Create(c *gin.Context) {
 func (h *MentorAvailabilityHandler) GetByUsername(c *gin.Context) {
 	username := c.Param("username")
 
+	// Check if query parameters are present for available slots
+	date := c.Query("date")
+	serviceIDStr := c.Query("service_id")
+
+	if date != "" && serviceIDStr != "" {
+		// Return available slots for a specific date and service
+		serviceID, err := uuid.Parse(serviceIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid service_id"})
+			return
+		}
+
+		resp, err := h.availabilityService.GetAvailableSlots(username, serviceID, date)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, resp)
+		return
+	}
+
+	// Return all availability rules for the mentor
 	resp, err := h.mentorAvailabilityService.GetByUsername(username)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "availability not found"})

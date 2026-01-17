@@ -59,3 +59,27 @@ func (h *AuthHandler) RefreshToken(c *gin.Context) {
 
 	c.JSON(http.StatusOK, resp)
 }
+
+// Logout revokes all refresh tokens for the authenticated user
+// DELETE /api/auth/logout
+func (h *AuthHandler) Logout(c *gin.Context) {
+	userID := c.GetString("user_id")
+	if userID == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not authenticated",
+		})
+		return
+	}
+
+	err := h.authService.Logout(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "failed to logout",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "logged out successfully",
+	})
+}

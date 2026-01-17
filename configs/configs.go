@@ -16,6 +16,8 @@ type Config struct {
 	Server   serverConfig
 	Database databaseConfig
 	JWT      jwtConfig
+	Razorpay RazorpayConfig
+	Zego     ZegoConfig
 }
 
 type serverConfig struct {
@@ -35,6 +37,17 @@ type jwtConfig struct {
 	Secret string
 }
 
+type RazorpayConfig struct {
+	KeyID         string
+	KeySecret     string
+	WebhookSecret string
+}
+
+type ZegoConfig struct {
+	AppID        int64
+	ServerSecret string
+}
+
 func NewConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
@@ -44,6 +57,11 @@ func NewConfig() *Config {
 	port, err := strconv.Atoi(GetEnvOrPanic(constants.EnvKeys.DBPort))
 	if err != nil {
 		panic("DB_PORT must be a number")
+	}
+
+	zegoAppID, err := strconv.ParseInt(GetEnvOrPanic(constants.EnvKeys.ZegoAppID), 10, 64)
+	if err != nil {
+		panic("ZEGO_APP_ID must be a number")
 	}
 
 	c := &Config{
@@ -61,6 +79,15 @@ func NewConfig() *Config {
 		},
 		JWT: jwtConfig{
 			Secret: GetEnvOrPanic(constants.EnvKeys.JWTSecret),
+		},
+		Razorpay: RazorpayConfig{
+			KeyID:         GetEnvOrPanic(constants.EnvKeys.RazorpayKeyID),
+			KeySecret:     GetEnvOrPanic(constants.EnvKeys.RazorpayKeySecret),
+			WebhookSecret: GetEnvOrPanic(constants.EnvKeys.RazorpayWebhookSecret),
+		},
+		Zego: ZegoConfig{
+			AppID:        zegoAppID,
+			ServerSecret: GetEnvOrPanic(constants.EnvKeys.ZegoServerSecret),
 		},
 	}
 

@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -225,4 +226,169 @@ func (r *BookingRepository) GetByUserID(
 	}
 
 	return result, nil
+}
+
+func (r *BookingRepository) GetByID(
+	ctx context.Context,
+	id uuid.UUID,
+) (*models.Booking, error) {
+
+	const query = `
+	SELECT
+		id,
+		mentor_id,
+		user_id,
+		service_id,
+		booking_date,
+		start_time,
+		end_time,
+		status,
+		price_cents,
+		currency,
+		created_at,
+		updated_at
+	FROM bookings
+	WHERE id = $1
+	LIMIT 1
+	`
+
+	var b models.Booking
+
+	err := r.db.QueryRowContext(ctx, query, id).Scan(
+		&b.ID,
+		&b.MentorID,
+		&b.UserID,
+		&b.ServiceID,
+		&b.BookingDate,
+		&b.StartTime,
+		&b.EndTime,
+		&b.Status,
+		&b.PriceCents,
+		&b.Currency,
+		&b.CreatedAt,
+		&b.UpdatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		return nil, errors.New("booking not found")
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &b, nil
+}
+
+func (r *BookingRepository) MarkConfirmed(
+	ctx context.Context,
+	tx *sql.Tx,
+	bookingID uuid.UUID,
+) error {
+
+	const query = `
+		UPDATE bookings
+		SET
+			status = $2,
+			updated_at = now()
+		WHERE id = $1
+		  AND status = $3
+	`
+
+	result, err := tx.ExecContext(
+		ctx,
+		query,
+		bookingID,
+		models.BookingStatusConfirmed,
+		models.BookingStatusPending,
+	)
+	if err != nil {
+		return err
+	}
+
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rows == 0 {
+		return errors.New("booking not in pending state")
+	}
+
+	return nil
+}
+
+func (r *BookingRepository) GetByMentorIDConfirmed(
+	mentorID uuid.UUID,
+) ([]*dtos.MentorBookedSessionResponse, error) {
+
+	const query = `
+	SELECT
+		b.id,
+		u.username AS user_username,
+		s.title AS service_title,
+		b.booking_date,
+		b.start_time,
+		b.end_time,
+		b.price_cents,
+		b.currency
+	FROM bookings b
+	JOIN users u ON u.id = b.user_id
+	JOIN mentor_services s ON s.id = b.service_id
+	WHERE b.mentor_id = $1
+	  AND b.status = 'confirmed'
+	ORDER BY b.booking_date DESC, b.start_time DESC
+	`
+
+	rows, err := r.db.Query(query, mentorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*dtos.MentorBookedSessionResponse
+
+	for rows.Next() {
+		var resp dtos.MentorBookedSessionResponse
+		var date time.Time
+		var start time.Time
+		var end time.Time
+
+		err := rows.Scan(
+			&resp.ID,
+			&resp.UserUsername,
+			&resp.ServiceTitle,
+			&date,
+			&start,
+			&end,
+			&resp.PriceCents,
+			&resp.Currency,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		resp.BookingDate = date.Format("2006-01-02")
+		resp.StartTime = start.Format("15:04")
+		resp.EndTime = end.Format("15:04")
+
+		result = append(result, &resp)
+	}
+
+	return result, nil
+}
+
+func (r *BookingRepository) UpdateStatus(
+	ctx context.Context,
+	bookingID uuid.UUID,
+	status models.BookingStatus,
+) error {
+	const query = `
+	UPDATE bookings
+	SET status = $1, updated_at = NOW()
+	WHERE id = $2
+	`
+
+	_, err := r.db.ExecContext(ctx, query, status, bookingID)
+	return err
 }

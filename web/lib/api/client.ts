@@ -442,6 +442,11 @@ export async function apiClient<TResponse, TBody = unknown>(
         console.log(`[API] ${method} ${endpoint} (retried after refresh)`, retryData)
       }
 
+      // Unwrap backend response format: { data: {...} } or { data: [...] }
+      if (retryData && typeof retryData === 'object' && 'data' in retryData && Object.keys(retryData).length === 1) {
+        return retryData.data as TResponse
+      }
+
       return retryData as TResponse
     } else {
       // Refresh failed - auth state already cleared by refreshAccessToken
@@ -486,6 +491,12 @@ export async function apiClient<TResponse, TBody = unknown>(
   // Log successful response in development
   if (process.env.NODE_ENV === "development") {
     console.log(`[API] ${method} ${endpoint} ✓`, data)
+  }
+
+  // Unwrap backend response format: { data: {...} } or { data: [...] }
+  // If response has a 'data' field at top level, return that instead of the wrapper
+  if (data && typeof data === 'object' && 'data' in data && Object.keys(data).length === 1) {
+    return data.data as TResponse
   }
 
   return data as TResponse
