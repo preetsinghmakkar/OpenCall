@@ -308,3 +308,67 @@ func (r *UserRepository) FindPublicProfileByUsername(
 
 	return &resp, nil
 }
+
+// UpdateByID updates user profile by ID
+func (r *UserRepository) UpdateByID(userID uuid.UUID, user *models.User) (*models.User, error) {
+	const query = `
+		UPDATE users
+		SET
+			first_name = $2,
+			last_name = $3,
+			email = $4,
+			bio = $5,
+			profile_picture = $6,
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING
+			id,
+			first_name,
+			last_name,
+			username,
+			email,
+			password_hash,
+			role,
+			profile_picture,
+			bio,
+			is_active,
+			created_at,
+			updated_at,
+			deleted_at
+	`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var updated models.User
+	err := r.db.QueryRowContext(
+		ctx,
+		query,
+		userID,
+		user.FirstName,
+		user.LastName,
+		user.Email,
+		user.Bio,
+		user.ProfilePicture,
+	).Scan(
+		&updated.ID,
+		&updated.FirstName,
+		&updated.LastName,
+		&updated.Username,
+		&updated.Email,
+		&updated.PasswordHash,
+		&updated.Role,
+		&updated.ProfilePicture,
+		&updated.Bio,
+		&updated.IsActive,
+		&updated.CreatedAt,
+		&updated.UpdatedAt,
+		&updated.DeletedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &updated, nil
+}

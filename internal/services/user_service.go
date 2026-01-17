@@ -87,3 +87,64 @@ func (s *User) GetUserProfile(
 ) (*dtos.UserProfileResponse, error) {
 	return s.userRepo.FindPublicProfileByUsername(username)
 }
+
+// UpdateProfile updates user profile
+func (s *User) UpdateProfile(
+	userID string,
+	req *dtos.UpdateUserProfileRequest,
+	profilePicturePath string,
+) (*dtos.UpdateUserProfileResponse, *appErrors.AppError) {
+
+	// Parse user ID
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, appErrors.InternalServerError()
+	}
+
+	// Fetch existing user
+	existingUser, err := s.userRepo.FindByID(uid)
+	if err != nil {
+		return nil, appErrors.InternalServerError()
+	}
+
+	// Check if email is being changed and if it already exists
+	if req.Email != existingUser.Email {
+		emailExists, err := s.userRepo.ExistsByEmail(req.Email)
+		if err != nil {
+			return nil, appErrors.InternalServerError()
+		}
+		if emailExists {
+			return nil, appErrors.EmailAlreadyExists()
+		}
+	}
+
+	// Update user entity
+	existingUser.FirstName = req.FirstName
+	existingUser.LastName = req.LastName
+	existingUser.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	existingUser.Bio = req.Bio
+
+	// Update profile picture if provided
+	if profilePicturePath != "" {
+		existingUser.ProfilePicture = profilePicturePath
+	}
+
+	// Update in database
+	updatedUser, err := s.userRepo.UpdateByID(uid, existingUser)
+	if err != nil {
+		return nil, appErrors.InternalServerError()
+	}
+
+	return &dtos.UpdateUserProfileResponse{
+		ID:             updatedUser.ID.String(),
+		FirstName:      updatedUser.FirstName,
+		LastName:       updatedUser.LastName,
+		Username:       updatedUser.Username,
+		Email:          updatedUser.Email,
+		Bio:            updatedUser.Bio,
+		ProfilePicture: updatedUser.ProfilePicture,
+		Role:           updatedUser.Role,
+		IsActive:       updatedUser.IsActive,
+		Message:        "profile updated successfully",
+	}, nil
+}

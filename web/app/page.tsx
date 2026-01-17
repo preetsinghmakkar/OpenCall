@@ -75,22 +75,9 @@ export default function Home() {
                 Book a Call →
               </Button>
             </Link>
-            <button className="flex items-center justify-center gap-2 px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-50">
-              <span className="text-orange-500">●</span>
-              <span className="text-gray-700">See How it works</span>
-            </button>
           </div>
 
-          {/* Company Logos */}
-          <div className="pt-8 border-t border-gray-200">
-            <p className="text-xs text-gray-500 mb-6">OUR EXPERTS COME FROM WORLD-CLASS COMPANIES</p>
-            <div className="flex justify-center gap-8 items-center flex-wrap">
-              <div className="w-6 h-6 bg-gray-400 rounded"></div>
-              <div className="w-6 h-6 bg-gray-400 rounded"></div>
-              <div className="w-6 h-6 bg-gray-400 rounded"></div>
-              <div className="w-6 h-6 bg-gray-400 rounded"></div>
-            </div>
-          </div>
+
         </div>
       </section>
 
@@ -156,14 +143,9 @@ export default function Home() {
       {/* Explore Categories */}
       <section id="solutions" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
         <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-between mb-12">
-            <h2 className="text-4xl font-bold text-gray-900">
-              Explore Categories
-            </h2>
-            <a href="#" className="text-orange-500 hover:text-orange-600 font-semibold">
-              View all →
-            </a>
-          </div>
+          <h2 className="text-4xl font-bold text-gray-900 mb-12">
+            Explore Categories
+          </h2>
           <p className="text-gray-600 mb-12">
             Mentorship for every step of your professional journey.
           </p>
@@ -238,9 +220,11 @@ export default function Home() {
                     <span>{expert.sessions}</span>
                     <span className="text-yellow-400">★★★★★</span>
                   </div>
-                  <button className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors">
-                    Book Session • {expert.price}
-                  </button>
+                  <Link href="/login">
+                    <button className="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors">
+                      Book Session • {expert.price}
+                    </button>
+                  </Link>
                 </div>
               </div>
             ))}
@@ -258,16 +242,16 @@ export default function Home() {
           <div className="space-y-6">
             {[
               {
-                q: "How do I prepare for my first call?",
-                a: "Prepare by reviewing the mentor's background and expertise. Outline your background or position and clarify the specific topics you'd like to discuss in advance to be the most productive in your time together."
+                q: "How do I book a session?",
+                a: "Choose a mentor, select an available time slot, complete the payment, and you're all set. You'll receive session details instantly."
               },
               {
-                q: "What if I need to cancel?",
-                a: "You can cancel or reschedule your session up to 24 hours before the scheduled time without any penalty."
+                q: "Who are the mentors on the platform?",
+                a: "All mentors go through a verification process to ensure quality, expertise, and authenticity."
               },
               {
-                q: "Are the calls recorded?",
-                a: "Calls are not recorded unless both the mentor and you agree to it. Your privacy is our top priority."
+                q: "What devices are supported?",
+                a: "You can join sessions from desktop, tablet, or mobile using a modern browser."
               }
             ].map((faq, idx) => (
               <div key={idx} className="bg-white p-6 rounded-lg">
@@ -310,7 +294,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="bg-gray-900 text-gray-300 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
@@ -327,15 +311,6 @@ export default function Home() {
                 <li><a href="#" className="hover:text-white">Browse Experts</a></li>
                 <li><a href="#" className="hover:text-white">Become a Mentor</a></li>
                 <li><a href="/about" className="hover:text-white">About</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Help Center</a></li>
-                <li><a href="#" className="hover:text-white">Community</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
               </ul>
             </div>
 

@@ -24,6 +24,9 @@ func RegisterProtectedEndpoints(
 	// Auth Routes (Protected)
 	protected.DELETE("/auth/logout", authHandler.Logout)
 
+	// User Routes (Protected)
+	protected.PUT("/users/profile", userHandler.UpdateProfile)
+
 	protected.POST("/mentor/profile", mentorHandler.CreateProfile)
 	protected.POST("/mentor/services", mentorServiceHandler.Create)
 	protected.POST("/mentor/availability", mentorAvailabilityHandler.Create)
