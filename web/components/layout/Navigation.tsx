@@ -80,8 +80,11 @@ export function Navigation() {
 
           {/* User Menu */}
           <div className="flex items-center gap-4">
-            {/* User Info */}
-            <div className="hidden sm:flex items-center gap-3">
+            {/* User Info - Clickable to go to profile */}
+            <Link
+              href="/profile"
+              className="hidden sm:flex items-center gap-3 cursor-pointer hover:opacity-75 transition-opacity"
+            >
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-800">
                   {user?.first_name} {user?.last_name}
@@ -89,16 +92,18 @@ export function Navigation() {
                 <p className="text-xs text-gray-500">@{user?.username}</p>
               </div>
               {user?.profile_picture ? (
-                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold">
-                  {user.profile_picture}
-                </div>
+                <img
+                  src={user.profile_picture}
+                  alt={user?.username}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-semibold">
                   {user?.first_name?.[0]?.toUpperCase()}
                   {user?.last_name?.[0]?.toUpperCase()}
                 </div>
               )}
-            </div>
+            </Link>
 
             {/* Logout Button */}
             <Button

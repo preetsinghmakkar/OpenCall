@@ -24,9 +24,11 @@ export function WelcomeCard({ isMentor, mentorTitle }: WelcomeCardProps) {
           </p>
         </div>
         {user?.profile_picture ? (
-          <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
-            {user.profile_picture}
-          </div>
+          <img
+            src={user.profile_picture}
+            alt={user?.first_name}
+            className="w-16 h-16 rounded-full object-cover"
+          />
         ) : (
           <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
             {user?.first_name?.[0]?.toUpperCase()}

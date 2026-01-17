@@ -10,6 +10,7 @@ interface RequestOptions<TBody> {
   headers?: Record<string, string>
   skipAuth?: boolean // Skip automatic token injection
   timeout?: number // Request timeout in milliseconds (default: 30000)
+  skipContentType?: boolean // Skip setting Content-Type header (useful for FormData)
 }
 
 /**
@@ -276,6 +277,7 @@ export async function apiClient<TResponse, TBody = unknown>(
     headers = {},
     skipAuth = false,
     timeout = 30000, // 30 seconds default
+    skipContentType = false,
   } = options
 
   // Get token: use provided token, or get from store, or skip if skipAuth is true
@@ -298,12 +300,13 @@ export async function apiClient<TResponse, TBody = unknown>(
 
   // Build request configuration
   const requestHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(skipContentType ? {} : { "Content-Type": "application/json" }),
     ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
     ...headers,
   }
 
-  const requestBody = body ? JSON.stringify(body) : undefined
+  const isFormData = body instanceof FormData
+  const requestBody = isFormData ? body : (body ? JSON.stringify(body) : undefined)
   const url = `${API_BASE_URL}${endpoint}`
 
   // Run request interceptors
@@ -312,7 +315,7 @@ export async function apiClient<TResponse, TBody = unknown>(
       url,
       method,
       headers: requestHeaders,
-      body: requestBody,
+      body: isFormData ? "[FormData]" : (requestBody as string | undefined),
     })
   }
 
@@ -320,7 +323,7 @@ export async function apiClient<TResponse, TBody = unknown>(
   if (process.env.NODE_ENV === "development") {
     console.log(`[API] ${method} ${endpoint}`, {
       headers: { ...requestHeaders, Authorization: accessToken ? "Bearer ***" : undefined },
-      body: requestBody ? JSON.parse(requestBody) : undefined,
+      body: isFormData ? "[FormData]" : (requestBody ? JSON.parse(requestBody as string) : undefined),
     })
   }
 
@@ -330,7 +333,7 @@ export async function apiClient<TResponse, TBody = unknown>(
     res = await fetchWithTimeout(url, {
       method,
       headers: requestHeaders,
-      body: requestBody,
+      body: requestBody as BodyInit | undefined,
     }, timeout)
   } catch (error: any) {
     // Handle timeout or network errors
@@ -375,7 +378,7 @@ export async function apiClient<TResponse, TBody = unknown>(
           url,
           method,
           headers: retryHeaders,
-          body: requestBody,
+          body: isFormData ? "[FormData]" : (requestBody as string | undefined),
         })
       }
 
@@ -384,7 +387,7 @@ export async function apiClient<TResponse, TBody = unknown>(
         retryRes = await fetchWithTimeout(url, {
           method,
           headers: retryHeaders,
-          body: requestBody,
+          body: requestBody as BodyInit | undefined,
         }, timeout)
       } catch (error: any) {
         const apiError = error instanceof ApiError

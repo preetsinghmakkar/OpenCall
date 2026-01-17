@@ -113,7 +113,7 @@ function DashboardContent() {
                 </p>
                 <p className="text-sm text-gray-600">{user?.email}</p>
                 <Link
-                  href={`/users/${user?.username}`}
+                  href="/profile"
                   className="text-sm text-orange-500 hover:text-orange-600 font-medium"
                 >
                   View Profile →
