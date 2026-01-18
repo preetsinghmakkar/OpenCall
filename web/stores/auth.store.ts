@@ -15,6 +15,7 @@ interface AuthState {
   login: (payload: LoginRequest) => Promise<void>
   refresh: () => Promise<void>
   logout: () => void
+  clearLocalOnly: () => void
   initializeFromLocalStorage: () => void
 }
 
@@ -39,6 +40,11 @@ export const useAuthStore = create<AuthState>()(
           const expiresAt =
             Date.now() + res.expires_in * 1000
 
+          // Validate response tokens
+          if (!res.access_token || !res.refresh_token) {
+            throw new Error("Invalid login response: missing tokens")
+          }
+
           // Explicitly set the state
           set({
             user: res.user,
@@ -50,7 +56,7 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
 
-          // Force localStorage update immediately
+          // Force localStorage update immediately with proper formatting
           if (typeof window !== "undefined") {
             const stateToSave = {
               user: res.user,
@@ -58,14 +64,28 @@ export const useAuthStore = create<AuthState>()(
               refreshToken: res.refresh_token,
               expiresAt,
               isAuthenticated: true,
-              loading: false,
-              error: null,
             }
-            localStorage.setItem("opencall-auth", JSON.stringify({ state: stateToSave, version: 0 }))
-            console.log("[Auth Store] Token saved to localStorage:", { 
-              hasToken: !!res.access_token, 
+            // Store with the Zustand persist middleware format
+            const storageData = {
+              state: stateToSave,
+              version: 0,
+            }
+            localStorage.setItem("opencall-auth", JSON.stringify(storageData))
+            console.log("[Auth Store] Login successful - tokens saved to localStorage:", { 
+              hasAccessToken: !!res.access_token, 
+              hasRefreshToken: !!res.refresh_token,
               username: res.user?.username 
             })
+            
+            // Verify tokens were actually saved
+            const saved = localStorage.getItem("opencall-auth")
+            if (!saved) {
+              throw new Error("Failed to persist tokens to localStorage")
+            }
+            const savedParsed = JSON.parse(saved)
+            if (!savedParsed.state?.accessToken || !savedParsed.state?.refreshToken) {
+              throw new Error("Tokens not properly persisted to localStorage")
+            }
           }
         } catch (err: any) {
           console.error("[Auth Store] Login error:", err)
@@ -80,7 +100,10 @@ export const useAuthStore = create<AuthState>()(
 
       refresh: async () => {
         const refreshToken = get().refreshToken
-        if (!refreshToken) return
+        if (!refreshToken) {
+          console.warn("[Auth Store] No refresh token available")
+          return
+        }
 
         try {
           const res = await authApi.refresh(refreshToken)
@@ -94,7 +117,10 @@ export const useAuthStore = create<AuthState>()(
             expiresAt,
             isAuthenticated: true,
           })
-        } catch {
+          
+          console.log("[Auth Store] Token refreshed successfully")
+        } catch (error) {
+          console.error("[Auth Store] Token refresh failed, logging out:", error)
           // Refresh failed → force logout
           get().logout()
         }
@@ -120,9 +146,29 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
           if (typeof window !== "undefined") {
+            // Complete cleanup: remove from localStorage and dispatch event
             localStorage.removeItem("opencall-auth")
-            console.log("[Auth Store] Local state cleared")
+            console.log("[Auth Store] Local state cleared and logout event dispatched")
           }
+        }
+      },
+
+      // Clear local auth state only (no backend call, no event dispatch)
+      clearLocalOnly: () => {
+        set({
+          user: null,
+          accessToken: null,
+          refreshToken: null,
+          expiresAt: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+        })
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("opencall-auth")
+          } catch {}
+          console.log("[Auth Store] Local auth state cleared (no backend call)")
         }
       },
 

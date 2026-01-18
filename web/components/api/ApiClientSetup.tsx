@@ -11,7 +11,7 @@ import { setupDefaultInterceptors } from "@/lib/api/interceptors"
  */
 export function ApiClientSetup() {
   const router = useRouter()
-  const { logout, initializeFromLocalStorage } = useAuthStore()
+  const { logout, initializeFromLocalStorage, clearLocalOnly } = useAuthStore()
 
   useEffect(() => {
     // Initialize auth state from localStorage on mount
@@ -22,7 +22,9 @@ export function ApiClientSetup() {
 
     // Listen for auth-logout events (dispatched when token refresh fails)
     const handleAuthLogout = () => {
-      logout()
+      // Token refresh failed or auth cleared by API client — avoid calling
+      // the full `logout` (which would call backend) to prevent loops.
+      clearLocalOnly()
       router.push("/login")
     }
 

@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -33,7 +34,10 @@ func (s *AuthService) Login(
 	req *dtos.LoginRequest,
 ) (*dtos.LoginResponse, error) {
 
-	user, err := s.userRepo.FindByEmailOrUsername(req.Identifier)
+	// normalize identifier (username or email) to ensure case-insensitive lookup
+	identifier := strings.ToLower(strings.TrimSpace(req.Identifier))
+
+	user, err := s.userRepo.FindByEmailOrUsername(identifier)
 	if err != nil || !user.IsActive {
 		return nil, errors.New("invalid credentials")
 	}

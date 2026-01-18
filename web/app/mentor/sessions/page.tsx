@@ -9,15 +9,27 @@ import { bookingsApi, type MentorBookedSessionResponse } from "@/lib/api/booking
 import { ApiError } from "@/lib/api/client"
 import { formatPrice } from "@/lib/currencies"
 import { toast } from "sonner"
+import { useAuthStore } from "@/stores/auth.store"
 
 function MentorSessionsContent() {
   const router = useRouter()
+  const { user } = useAuthStore()
   const [loading, setLoading] = useState(true)
   const [sessions, setSessions] = useState<MentorBookedSessionResponse[]>([])
   const [error, setError] = useState("")
 
   useEffect(() => {
     const loadSessions = async () => {
+      // Wait for user to be available from the auth store
+      if (!user) return
+
+      // If the current user is not a mentor, don't attempt mentor API calls
+      if (user.role !== "mentor") {
+        setLoading(false)
+        setSessions([])
+        return
+      }
+
       try {
         setLoading(true)
         setError("")
@@ -31,12 +43,19 @@ function MentorSessionsContent() {
       } catch (err: any) {
         let errorMessage = err?.message || "Failed to load booked sessions"
 
-        // If mentor profile is missing, guide user to create it
+        // If mentor profile is missing, guide user to create it (only for mentors)
         if (err instanceof ApiError && err.status === 404) {
-          errorMessage =
-            (err.data?.error as string) ||
-            "Mentor profile not found. Please create your mentor profile first."
-          router.push("/mentor/create-profile")
+          if (user.role === "mentor") {
+            errorMessage =
+              (err.data?.error as string) ||
+              "Mentor profile not found. Please create your mentor profile first."
+            router.push("/mentor/create-profile")
+          } else {
+            // Non-mentors should not see mentor profile errors
+            setLoading(false)
+            setSessions([])
+            return
+          }
         }
 
         setError(errorMessage)
@@ -47,7 +66,7 @@ function MentorSessionsContent() {
     }
 
     loadSessions()
-  }, [])
+  }, [user])
 
   if (loading) {
     return (

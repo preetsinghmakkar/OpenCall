@@ -102,12 +102,20 @@ function getAuthState(): {
     }
     
     const parsed = JSON.parse(stored)
-    return {
-      accessToken: parsed?.state?.accessToken || null,
-      refreshToken: parsed?.state?.refreshToken || null,
-      expiresAt: parsed?.state?.expiresAt || null,
-    }
-  } catch {
+    const state = parsed?.state || parsed
+    
+    // Validate tokens are strings before returning
+    const accessToken = typeof state?.accessToken === 'string' ? state.accessToken : null
+    const refreshToken = typeof state?.refreshToken === 'string' ? state.refreshToken : null
+    const expiresAt = typeof state?.expiresAt === 'number' ? state.expiresAt : null
+    
+    return { accessToken, refreshToken, expiresAt }
+  } catch (error) {
+    console.warn("[API Client] Failed to parse auth state from localStorage, clearing:", error)
+    // If localStorage is corrupted, clear it
+    try {
+      localStorage.removeItem("opencall-auth")
+    } catch {}
     return { accessToken: null, refreshToken: null, expiresAt: null }
   }
 }
