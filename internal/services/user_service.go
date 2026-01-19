@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"strings"
 	"time"
 
@@ -88,11 +89,12 @@ func (s *User) GetUserProfile(
 	return s.userRepo.FindPublicProfileByUsername(username)
 }
 
-// UpdateProfile updates user profile
+// UpdateProfile updates user profile and handles old picture deletion from S3
 func (s *User) UpdateProfile(
 	userID string,
 	req *dtos.UpdateUserProfileRequest,
-	profilePicturePath string,
+	profilePictureURL string,
+	s3Service *S3Service,
 ) (*dtos.UpdateUserProfileResponse, *appErrors.AppError) {
 
 	// Parse user ID
@@ -124,9 +126,13 @@ func (s *User) UpdateProfile(
 	existingUser.Email = strings.ToLower(strings.TrimSpace(req.Email))
 	existingUser.Bio = req.Bio
 
-	// Update profile picture if provided
-	if profilePicturePath != "" {
-		existingUser.ProfilePicture = profilePicturePath
+	// Handle profile picture update and old picture deletion from S3
+	if profilePictureURL != "" {
+		// Delete old picture from S3 if it exists
+		if existingUser.ProfilePicture != "" {
+			s3Service.DeleteProfilePicture(context.Background(), existingUser.ProfilePicture)
+		}
+		existingUser.ProfilePicture = profilePictureURL
 	}
 
 	// Update in database

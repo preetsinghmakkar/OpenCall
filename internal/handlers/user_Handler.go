@@ -4,24 +4,23 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/preetsinghmakkar/OpenCall/internal/dtos"
 	"github.com/preetsinghmakkar/OpenCall/internal/services"
 )
 
 type User struct {
 	userService *services.User
+	s3Service   *services.S3Service
 }
 
-func NewUserHandler(userService *services.User) *User {
+func NewUserHandler(userService *services.User, s3Service *services.S3Service) *User {
 	return &User{
 		userService: userService,
+		s3Service:   s3Service,
 	}
 }
 
@@ -84,12 +83,21 @@ func (h *User) GetUserProfile(c *gin.Context) {
 	c.JSON(200, resp)
 }
 
-// UpdateProfile updates user profile information and picture
+// UpdateProfile updates user profile information and picture (uploads to S3)
 func (h *User) UpdateProfile(c *gin.Context) {
 	userID := c.GetString("user_id")
 	if userID == "" {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
 			"error": "unauthorized",
+		})
+		return
+	}
+
+	// Parse user ID
+	uid, err := uuid.Parse(userID)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid user id",
 		})
 		return
 	}
@@ -109,9 +117,9 @@ func (h *User) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	profilePicturePath := ""
+	profilePictureURL := ""
 
-	// Handle profile picture upload
+	// Handle profile picture upload to S3
 	file, err := c.FormFile("profilePicture")
 	if err == nil && file != nil {
 		// Validate file type
@@ -136,34 +144,20 @@ func (h *User) UpdateProfile(c *gin.Context) {
 			return
 		}
 
-		// Create upload directory
-		uploadDir := filepath.Join("web", "public", "uploads", userID)
-		if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
+		// Upload to S3
+		url, uploadErr := h.s3Service.UploadProfilePicture(c.Request.Context(), uid, file)
+		if uploadErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "failed to create upload directory",
+				"error": fmt.Sprintf("failed to upload profile picture: %v", uploadErr),
 			})
 			return
 		}
 
-		// Generate unique filename
-		ext := filepath.Ext(file.Filename)
-		filename := "profile-" + strconv.FormatInt(time.Now().Unix(), 10) + ext
-		filepath := filepath.Join(uploadDir, filename)
-
-		// Save file
-		if err := c.SaveUploadedFile(file, filepath); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"error": "failed to save file",
-			})
-			return
-		}
-
-		// Store relative path for database
-		profilePicturePath = "/uploads/" + userID + "/" + filename
+		profilePictureURL = url
 	}
 
-	// Update profile in service
-	resp, appErr := h.userService.UpdateProfile(userID, &req, profilePicturePath)
+	// Update profile in service (which handles deleting old picture)
+	resp, appErr := h.userService.UpdateProfile(userID, &req, profilePictureURL, h.s3Service)
 	if appErr != nil {
 		c.JSON(appErr.Status, gin.H{
 			"error": appErr.Message,

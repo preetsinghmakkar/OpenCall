@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -94,8 +95,21 @@ func main() {
 		config.Zego.ServerSecret,
 	)
 
+	// S3 Service for profile picture uploads
+	s3BucketName := os.Getenv("AWS_S3_BUCKET")
+	s3Region := os.Getenv("AWS_REGION")
+	if s3BucketName == "" || s3Region == "" {
+		log.Warn().Msg("AWS_S3_BUCKET or AWS_REGION not set, S3 profile picture uploads will not work")
+	}
+	s3Service, err := services.NewS3Service(s3BucketName, s3Region)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to initialize S3 service, profile picture uploads will not work")
+		// Create a nil-safe S3Service or continue with graceful degradation
+		// For now, we'll create one anyway and let it fail at upload time if needed
+	}
+
 	// handlers
-	userHandler := handlers.NewUserHandler(userService)
+	userHandler := handlers.NewUserHandler(userService, s3Service)
 	authHandler := handlers.NewAuthHandler(authService)
 	mentorHandler := handlers.NewMentorHandler(mentorProfileService)
 	mentorServiceHandler := handlers.NewMentorServiceHandler(mentorOfferingService)
