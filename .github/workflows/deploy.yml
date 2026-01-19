@@ -34,14 +34,14 @@ jobs:
 
       - name: Pre-stop service and remove old binary (EC2)
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          EC2_TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
+          BINARY_NAME: opencall
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: EC2_TARGET_DIR,BINARY_NAME
-          env:
-            EC2_TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
-            BINARY_NAME: opencall
           script: |
             set -e
             echo "EC2_TARGET_DIR=${EC2_TARGET_DIR}"
@@ -67,14 +67,14 @@ jobs:
 
       - name: Start service on EC2
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          EC2_TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
+          BINARY_NAME: opencall
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           envs: EC2_TARGET_DIR,BINARY_NAME
-          env:
-            EC2_TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
-            BINARY_NAME: opencall
           script: |
             set -e
             sudo chmod +x "${EC2_TARGET_DIR}/${BINARY_NAME}"
