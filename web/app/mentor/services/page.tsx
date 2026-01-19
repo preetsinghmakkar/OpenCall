@@ -155,7 +155,7 @@ function ServicesListContent() {
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>Duration: {service.duration_minutes} minutes</span>
                         <span>
-                          Price: {formatPrice(service.price_cents, service.currency)}
+                          Price: {(service.price_cents / 100).toFixed(2)} {service.currency}
                         </span>
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${

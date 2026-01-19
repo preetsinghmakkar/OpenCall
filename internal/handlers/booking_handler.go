@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -88,20 +89,17 @@ func (h *BookingHandler) GetMentorBookedSessions(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user"})
 		return
 	}
+	log.Printf("[BookingHandler] GetMentorBookedSessions called for user_id=%s", userID.String())
 
-	// Find mentor profile for this user
-	mentor, err := h.mentorRepo.FindByUserID(userID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "mentor profile not found"})
-		return
-	}
-
-	// Get booked sessions for this mentor
-	sessions, err := h.bookingService.GetMentorBookedSessions(mentor.ID)
+	// Use service-level helper that will try the normal mentor-profile
+	// lookup, and fall back to searching by mentor user_id when needed.
+	sessions, err := h.bookingService.GetMentorBookedSessionsByUser(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch booked sessions"})
 		return
 	}
+
+	log.Printf("[BookingHandler] returning %d sessions for user_id=%s", len(sessions), userID.String())
 
 	c.JSON(http.StatusOK, sessions)
 }

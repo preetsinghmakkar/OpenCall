@@ -80,6 +80,14 @@ function CreateAvailabilityContent() {
       }
     }
 
+    // Enforce minimum 30-minute availability window
+    if (endTotal-startTotal < 30) {
+      return {
+        valid: false,
+        error: "Minimum availability duration is 30 minutes",
+      }
+    }
+
     return { valid: true }
   }
 
@@ -247,9 +255,6 @@ function CreateAvailabilityContent() {
                   <FieldDescription className="text-gray-500">
                     When your availability starts (24-hour format)
                   </FieldDescription>
-                  {formErrors.start_time && (
-                    <FieldError>{formErrors.start_time}</FieldError>
-                  )}
                 </Field>
 
                 {/* End Time Field */}
@@ -271,9 +276,6 @@ function CreateAvailabilityContent() {
                   <FieldDescription className="text-gray-500">
                     When your availability ends (24-hour format)
                   </FieldDescription>
-                  {formErrors.end_time && (
-                    <FieldError>{formErrors.end_time}</FieldError>
-                  )}
                 </Field>
               </div>
 

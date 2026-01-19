@@ -62,6 +62,11 @@ func (s *BookingService) CreateBooking(
 		return nil, errors.New("mentor not available")
 	}
 
+	// 4a️⃣ Prevent mentors from booking themselves
+	if mentor.UserID == userID {
+		return nil, errors.New("cannot book your own service")
+	}
+
 	// 5️⃣ Build start/end datetime (UTC)
 	start := time.Date(
 		bookingDate.Year(), bookingDate.Month(), bookingDate.Day(),
@@ -190,4 +195,28 @@ func (s *BookingService) GetMentorBookedSessions(
 	}
 
 	return sessions, nil
+}
+
+// GetMentorBookedSessionsByUser attempts to return mentor bookings for the
+// authenticated user. First it tries to use the mentor profile ID (normal
+// path). If that fails (e.g. mentor profile inactive), it falls back to
+// searching bookings by the mentor's user_id.
+func (s *BookingService) GetMentorBookedSessionsByUser(
+	userID uuid.UUID,
+) ([]*dtos.MentorBookedSessionResponse, error) {
+	// Try to find mentor profile first
+	mentor, err := s.mentorRepo.FindByUserID(userID)
+	if err == nil {
+		// normal path
+		sessions, err := s.bookingRepo.GetByMentorIDConfirmed(mentor.ID)
+		if err == nil {
+			return sessions, nil
+		}
+		// if query failed, log and fall through to fallback
+		// (logging here helps debug unexpected DB errors)
+		// Note: keep going to fallback below
+	}
+
+	// Fallback: query bookings where mentor_profiles.user_id = userID
+	return s.bookingRepo.GetByMentorByUserID(userID)
 }

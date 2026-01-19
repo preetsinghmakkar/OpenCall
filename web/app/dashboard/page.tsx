@@ -12,6 +12,7 @@ import { bookingsApi } from "@/lib/api/bookings"
 import type { UserProfileResponse, MyBookingResponse } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { formatPrice } from "@/lib/currencies"
 
 function DashboardContent() {
   const { user } = useAuthStore()
@@ -236,7 +237,7 @@ function DashboardContent() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-800">
-                          ${(booking.price_cents / 100).toFixed(2)}
+                          {formatPrice(booking.price_cents, booking.currency)}
                         </p>
                         <p className="text-xs text-gray-500">{booking.currency}</p>
                       </div>

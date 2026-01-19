@@ -322,6 +322,8 @@ func (r *BookingRepository) GetByMentorIDConfirmed(
 	mentorID uuid.UUID,
 ) ([]*dtos.MentorBookedSessionResponse, error) {
 
+	// Return bookings for the mentor. Include both pending and confirmed
+	// bookings so mentors see newly created bookings immediately.
 	const query = `
 	SELECT
 		b.id,
@@ -336,7 +338,7 @@ func (r *BookingRepository) GetByMentorIDConfirmed(
 	JOIN users u ON u.id = b.user_id
 	JOIN mentor_services s ON s.id = b.service_id
 	WHERE b.mentor_id = $1
-	  AND b.status = 'confirmed'
+	  AND b.status IN ('pending','confirmed')
 	ORDER BY b.booking_date DESC, b.start_time DESC
 	`
 
@@ -376,6 +378,69 @@ func (r *BookingRepository) GetByMentorIDConfirmed(
 	}
 
 	return result, nil
+}
+
+// GetByMentorByUserID finds bookings for a mentor using the mentor's user_id
+// This is a fallback in case mentor_profiles.is_active is false or the
+// direct mentor profile lookup fails for some reason. It joins through
+// mentor_profiles to match bookings where mp.user_id = $1.
+func (r *BookingRepository) GetByMentorByUserID(
+	userID uuid.UUID,
+) ([]*dtos.MentorBookedSessionResponse, error) {
+	const query = `
+	SELECT
+		b.id,
+		u.username AS user_username,
+		s.title AS service_title,
+		b.booking_date,
+		b.start_time,
+		b.end_time,
+		b.price_cents,
+		b.currency
+	FROM bookings b
+	JOIN mentor_profiles mp ON mp.id = b.mentor_id
+	JOIN users u ON u.id = b.user_id
+	JOIN mentor_services s ON s.id = b.service_id
+	WHERE mp.user_id = $1
+	  AND b.status IN ('pending','confirmed')
+	ORDER BY b.booking_date DESC, b.start_time DESC
+	`
+
+	rows, err := r.db.Query(query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []*dtos.MentorBookedSessionResponse
+
+	for rows.Next() {
+		var resp dtos.MentorBookedSessionResponse
+		var date time.Time
+		var start time.Time
+		var end time.Time
+
+		if err := rows.Scan(
+			&resp.ID,
+			&resp.UserUsername,
+			&resp.ServiceTitle,
+			&date,
+			&start,
+			&end,
+			&resp.PriceCents,
+			&resp.Currency,
+		); err != nil {
+			return nil, err
+		}
+
+		resp.BookingDate = date.Format("2006-01-02")
+		resp.StartTime = start.Format("15:04")
+		resp.EndTime = end.Format("15:04")
+
+		result = append(result, &resp)
+	}
+
+	return result, rows.Err()
 }
 
 func (r *BookingRepository) UpdateStatus(

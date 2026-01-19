@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -42,6 +43,14 @@ func (s *MentorAvailabilityService) CreateRule(
 	end, err := time.Parse("15:04", req.EndTime)
 	if err != nil {
 		return nil, err
+	}
+
+	// Enforce that availability duration is at least 30 minutes
+	if !end.After(start) {
+		return nil, errors.New("end time must be after start time")
+	}
+	if end.Sub(start) < 30*time.Minute {
+		return nil, errors.New("availability duration must be at least 30 minutes")
 	}
 
 	rule := &models.MentorAvailabilityRule{

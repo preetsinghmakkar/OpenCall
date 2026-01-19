@@ -16,12 +16,14 @@ import type { MentorServiceResponse } from "@/lib/api/services"
 import type { AvailableSlot } from "@/lib/api/availability"
 import { formatPrice } from "@/lib/currencies"
 import { toast } from "sonner"
+import { useAuthStore } from "@/stores/auth.store"
 
 function BookingFlowContent() {
   const params = useParams()
   const router = useRouter()
   const username = params?.username as string
   const serviceId = params?.serviceId as string
+  const { user } = useAuthStore()
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -114,6 +116,12 @@ function BookingFlowContent() {
   const handleBooking = async () => {
     if (!selectedDate || !selectedSlot || !mentor || !service) {
       toast.error("Please select a date and time slot")
+      return
+    }
+
+    // Prevent booking own service (mentor booking themselves)
+    if (user?.username && user.username === mentor.user.username) {
+      toast.error("You cannot book your own service")
       return
     }
 
@@ -279,7 +287,7 @@ function BookingFlowContent() {
             <div className="flex gap-4 pt-4">
               <Button
                 onClick={handleBooking}
-                disabled={!selectedDate || !selectedSlot || submitting}
+                disabled={!selectedDate || !selectedSlot || submitting || (user?.username === mentor.user.username)}
                 className="flex-1 bg-orange-500 text-white hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? "Creating Booking..." : "Confirm Booking"}
@@ -294,6 +302,12 @@ function BookingFlowContent() {
                 Cancel
               </Button>
             </div>
+
+            {user?.username === mentor.user.username && (
+              <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                You cannot book your own service.
+              </div>
+            )}
           </FieldGroup>
         </div>
       </main>

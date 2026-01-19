@@ -8,7 +8,7 @@ import { apiClient } from "./client"
 export interface CreateMentorServiceRequest {
   title: string // required, min 3 chars
   description?: string
-  duration_minutes: 30 | 60 // required, must be 30 or 60
+  duration_minutes: 30 // required (30 minutes only)
   price_cents: number // required, min 0
   currency: string // required, exactly 3 characters (e.g., "USD")
 }

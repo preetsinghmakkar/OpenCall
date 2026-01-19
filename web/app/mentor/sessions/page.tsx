@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { Navigation } from "@/components/layout/Navigation"
 import { MentorSessionCard } from "@/components/ui/mentor-session-card"
 import { bookingsApi, type MentorBookedSessionResponse } from "@/lib/api/bookings"
+import { usersApi } from "@/lib/api/users"
 import { ApiError } from "@/lib/api/client"
 import { formatPrice } from "@/lib/currencies"
 import { toast } from "sonner"
@@ -23,18 +24,36 @@ function MentorSessionsContent() {
       // Wait for user to be available from the auth store
       if (!user) return
 
-      // If the current user is not a mentor, don't attempt mentor API calls
-      if (user.role !== "mentor") {
-        setLoading(false)
-        setSessions([])
-        return
-      }
-
+      // If user object has role 'mentor' (case-insensitive) we call mentor API.
+      // Otherwise, fetch the public profile to check `is_mentor` as a fallback.
       try {
         setLoading(true)
         setError("")
 
+        const isRoleMentor = !!user.role && user.role.toLowerCase() === "mentor"
+        let isMentor = isRoleMentor
+
+        if (!isRoleMentor) {
+          // Fallback: check backend profile for mentor flag
+          try {
+            const profile = await usersApi.getProfile(user.username)
+            console.debug("[MentorSessions] usersApi.getProfile returned:", profile)
+            isMentor = !!profile.is_mentor
+          } catch (profileErr) {
+            console.warn("[MentorSessions] failed to load profile for mentor check:", profileErr)
+          }
+        }
+
+        if (!isMentor) {
+          setLoading(false)
+          setSessions([])
+          return
+        }
+
+        // Now fetch mentor booked sessions
+        console.debug("[MentorSessions] fetching mentor booked sessions")
         const data = await bookingsApi.getMentorBookedSessions()
+        console.debug("[MentorSessions] mentor sessions response:", data)
         setSessions(data)
 
         if (data.length === 0) {
@@ -45,17 +64,9 @@ function MentorSessionsContent() {
 
         // If mentor profile is missing, guide user to create it (only for mentors)
         if (err instanceof ApiError && err.status === 404) {
-          if (user.role === "mentor") {
-            errorMessage =
-              (err.data?.error as string) ||
-              "Mentor profile not found. Please create your mentor profile first."
-            router.push("/mentor/create-profile")
-          } else {
-            // Non-mentors should not see mentor profile errors
-            setLoading(false)
-            setSessions([])
-            return
-          }
+          // redirect mentors to create profile
+          router.push("/mentor/create-profile")
+          return
         }
 
         setError(errorMessage)

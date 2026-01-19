@@ -36,7 +36,7 @@ function CreateServiceContent() {
   }>({})
 
   const defaultCurrency = getDefaultCurrency()
-  const [pricePreview, setPricePreview] = useState("$0.00")
+  const [pricePreview, setPricePreview] = useState(`${(0).toFixed(2)} ${defaultCurrency.code}`)
   const [selectedCurrency, setSelectedCurrency] = useState(defaultCurrency.code)
 
   // Update price preview
@@ -51,9 +51,9 @@ function CreateServiceContent() {
         const currencyOption = currencies.find((c) => c.code === currency) || defaultCurrency
 
         if (price > 0) {
-          setPricePreview(`${currencyOption.symbol}${price.toFixed(2)}`)
+          setPricePreview(`${price.toFixed(2)} ${currencyOption.code}`)
         } else {
-          setPricePreview(`${currencyOption.symbol}0.00`)
+          setPricePreview(`0.00 ${currencyOption.code}`)
         }
         setSelectedCurrency(currency)
       }
@@ -127,8 +127,8 @@ function CreateServiceContent() {
       errors.title = "Title must be at least 3 characters long"
     }
 
-    if (!duration || (duration !== "30" && duration !== "60")) {
-      errors.duration_minutes = "Duration must be 30 or 60 minutes"
+    if (!duration || duration !== "30") {
+      errors.duration_minutes = "Duration must be 30 minutes"
     }
 
     if (!price) {
@@ -155,7 +155,7 @@ function CreateServiceContent() {
       await servicesApi.create({
         title: title.trim(),
         description: description?.trim() || undefined,
-        duration_minutes: parseInt(duration, 10) as 30 | 60,
+        duration_minutes: 30,
         price_cents: dollarsToCents(parseFloat(price)),
         currency: currency.toUpperCase(),
       })
@@ -272,20 +272,10 @@ function CreateServiceContent() {
                     />
                     <span className="text-gray-700">30 minutes</span>
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="duration_minutes"
-                      value="60"
-                      className="w-4 h-4 text-orange-500 border-gray-300 focus:ring-orange-500"
-                      aria-invalid={formErrors.duration_minutes ? "true" : "false"}
-                    />
-                    <span className="text-gray-700">60 minutes (1 hour)</span>
-                  </label>
                 </div>
                 <FieldDescription className="text-gray-500">
                   Choose the duration for this service. Sessions are booked in
-                  30-minute or 60-minute blocks.
+                  30-minute blocks.
                 </FieldDescription>
                 {formErrors.duration_minutes && (
                   <FieldError>{formErrors.duration_minutes}</FieldError>
@@ -299,10 +289,7 @@ function CreateServiceContent() {
                   <FieldLabel htmlFor="price" className="text-gray-800">
                     Price <span className="text-red-500">*</span>
                   </FieldLabel>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
-                      $
-                    </span>
+                  <div>
                     <Input
                       id="price"
                       name="price"
@@ -311,7 +298,7 @@ function CreateServiceContent() {
                       min="0"
                       placeholder="0.00"
                       required
-                      className="border-gray-300 placeholder:text-gray-400 pl-8"
+                      className="border-gray-300 placeholder:text-gray-400"
                       aria-invalid={formErrors.price ? "true" : "false"}
                     />
                   </div>
@@ -351,17 +338,7 @@ function CreateServiceContent() {
                 </Field>
               </div>
 
-              {/* Price Preview */}
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-                <p className="text-sm font-medium text-orange-800 mb-1">
-                  Price Preview
-                </p>
-                <p className="text-sm text-orange-700">
-                  This service will be priced at{" "}
-                  <span className="font-semibold">{pricePreview}</span> per
-                  session
-                </p>
-              </div>
+              {/* Price preview removed — not interactive or necessary */}
 
               {/* Submit Buttons */}
               <div className="flex gap-4 pt-4">

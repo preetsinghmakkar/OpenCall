@@ -37,9 +37,7 @@ func main() {
 	router := gin.Default()
 	router.Use(config.CorsNew())
 
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(200, gin.H{"status": "ok"})
-	})
+	router.GET("/health", handlers.NewHealthHandler(client.DB))
 
 	// repositories
 	userRepo := repositories.NewUserRepository(client.DB)
