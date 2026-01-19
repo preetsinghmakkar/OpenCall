@@ -37,6 +37,9 @@ jobs:
 
       - name: Pre-stop service and remove old binary (EC2)
         uses: appleboy/ssh-action@v1.0.0
+        env:
+          EC2_TARGET_DIR: ${{ secrets.EC2_TARGET_DIR }}
+          BINARY_NAME: opencall
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
